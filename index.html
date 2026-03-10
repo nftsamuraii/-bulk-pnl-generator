@@ -1,308 +1,936 @@
-  <div style="font-size:11px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:8px;">Import from Bulk Card</div>
-  <div style="display:flex;gap:8px;margin-bottom:8px;">
-    <input id="importUrl" type="text" placeholder="Paste image URL..." style="flex:1;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;">
-    <label style="display:flex;align-items:center;justify-content:center;padding:10px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:12px;cursor:pointer;white-space:nowrap;">
-      📁
-      <input type="file" accept="image/*" style="display:none;" onchange="importFromFile(event)">
-    </label>
-  </div>
-  <button onclick="importFromUrl()" style="width:100%;padding:10px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-family:Playfair Display,serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='rgba(200,184,130,0.1)'" onmouseout="this.style.background='transparent'">✦ IMPORT & AUTOFILL</button>
-  <div id="importStatus" style="font-size:12px;color:#555;letter-spacing:1px;margin-top:6px;text-align:center;padding:6px;border-radius:6px;display:none;"></div>
-<div style="display:flex;gap:6px;margin-bottom:8px;">
-  <button onclick="setUrlMode('image')" id="modeImg" style="flex:1;padding:7px;border-radius:6px;border:1px solid #00e8a2;background:rgba(0,232,162,0.12);color:#00e8a2;font-family:Inter,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">🖼 IMAGE</button>
-  <button onclick="setUrlMode('video')" id="modeVid" style="flex:1;padding:7px;border-radius:6px;border:1px solid #2a2a2a;background:#1e1e1e;color:#666;font-family:Inter,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;">🎬 VIDEO</button>
-</div>
-<div id="imageMode">
-  <input id="urlInput" type="text" placeholder="Paste image URL..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:6px;" oninput="loadUrlBg(this.value)">
-  <div id="pasteHint" style="font-size:11px;color:#555;letter-spacing:1px;text-align:center;">CTRL+V — PASTE IMAGE FROM CLIPBOARD</div><div style="font-size:10px;color:#444;letter-spacing:1px;margin-top:8px;line-height:1.6;">💡 <b style="color:#666;">HOW TO USE:</b><br>1. Right-click any image → Copy image<br>2. Press <b style="color:#888;">Ctrl+V</b> anywhere on this page<br>3. Or paste a direct image URL above</div>
-</div>
-<div id="videoMode" style="display:none;">
-  <input id="videoUrlInput" type="text" placeholder="Paste video URL (mp4, webm)..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:8px;" onchange="loadVideoBg(this.value)">
-  <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">— OR —</div>
-  <label style="display:block;width:100%;padding:10px;background:#1e1e1e;border:1px dashed #444;border-radius:8px;color:#888;font-family:Inter,sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;text-align:center;">
-    📁 UPLOAD FROM DEVICE
-    <input type="file" accept="video/*" style="display:none;" onchange="loadVideoFile(event)">
-  </label>
-  <div style="font-size:10px;color:#444;letter-spacing:1px;margin-bottom:6px;line-height:1.6;">💡 <b style="color:#666;">HOW TO USE:</b><br>1. Paste a direct video URL above<br>2. Or upload a video from your device<br>3. Hit <b style="color:#888;">GENERATE</b> to preview<br>4. Hit <b style="color:#ff4060;">RECORD & SAVE</b> to export .webm</div><div id="videoStatus" style="font-size:11px;color:#555;letter-spacing:1px;margin-top:8px;text-align:center;"></div>
-  <button onclick="startVideoRecord()" id="btnRecord" style="display:none;width:100%;padding:10px;margin-top:8px;background:#ff4060;color:#fff;border:none;border-radius:8px;font-family:Playfair Display,serif;font-size:16px;letter-spacing:2px;cursor:pointer;">⏺ RECORD & SAVE</button>
-  <div id="recordStatus" style="font-size:11px;color:#555;letter-spacing:1px;margin-top:6px;text-align:center;"></div>
-</div>
-</div>
-</div>
-</div></div><div class="preview-wrap"><h2>PREVIEW</h2><div class="preview-empty" id="emptyState"><span class="icon">📊</span><span>Fill in your trade data<br>and hit GENERATE</span></div><canvas id="previewCanvas" style="display:none"></canvas><button class="btn-generate" onclick="generate()">GENERATE CARD</button><button class="btn-download" id="btnDownload" onclick="downloadCard()">⬇ DOWNLOAD</button></div></div><style id="bgHoverStyle">.bg-thumb[data-idx]:hover{border-color:var(--green);}.bg-thumb[data-idx].selected{border-color:var(--green);}</style>
-function selectBg(idx){selectedBg=idx;document.querySelectorAll('.bg-thumb[data-idx]').forEach(el=>el.classList.remove('selected'));document.querySelector(`.bg-thumb[data-idx="${idx}"]`).classList.add('selected');customBgDataUrl=null;}function toggleUrlInput(){const wrap=document.getElementById('urlInputWrap');wrap.style.display=wrap.style.display==='none'?'block':'none';if(wrap.style.display==='block')document.getElementById('urlInput').focus();}function loadUrlBg(url){if(!url)return;const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{customBgDataUrl=url;document.querySelectorAll('.bg-thumb[data-idx]').forEach(el=>el.classList.remove('selected'));document.getElementById('urlThumb').classList.add('selected');};img.onerror=()=>{};img.src=url;}function loadCustomBg(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{customBgDataUrl=ev.target.result;document.querySelectorAll('.bg-thumb[data-idx]').forEach(el=>el.classList.remove('selected'));};reader.readAsDataURL(file);}function wrapText(ctx,text,x,y,maxWidth,lineHeight){const words=text.split(' ');let line='';for(let n=0;n<words.length;n++){const testLine=line+words[n]+' ';if(ctx.measureText(testLine).width>maxWidth && n>0){ctx.fillText(line,x,y);line=words[n]+' ';y+=lineHeight;}else{line=testLine;}}ctx.fillText(line,x,y);}function formatPnl(input){if(input.includes('$')|| input.includes('%'))return input;const isNeg=input.startsWith('-');const num=parseFloat(input.replace(/[^0-9.]/g,''));if(isNaN(num))return input;const formatted=num.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});return(isNeg ? '-':'+')+'$'+formatted;}function generate(){cancelAnimationFrame(animFrameId);videoEl=null;const c=document.getElementById('previewCanvas');c.width=CARD_W;c.height=CARD_H;const leverage=document.getElementById('leverage').value || '1';const pair=document.getElementById('pair').value || 'SOL-USD';const pnlVal=document.getElementById('pnlValue').value||'0';const pnlType=document.getElementById('pnlType').value;let pnl=(pnlVal.startsWith('-')?'':'+')+(pnlType==='$'?'$'+parseFloat(pnlVal.replace(/[^0-9.]/g,'')).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):parseFloat(pnlVal.replace(/[^0-9.]/g,'')).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'%');if(pnlVal.startsWith('-'))pnl='-'+(pnlType==='$'?'$':'')+parseFloat(pnlVal.replace(/[^0-9.]/g,'')).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+(pnlType==='%'?'%':'');if(direction==='Short'){const wasPos=!pnl.startsWith('-');if(wasPos)pnl='-'+pnl.replace(/^\+/,'');else pnl='+'+pnl.replace(/^-/,'');}const entryP=document.getElementById('entryPrice').value || '—';const markP=document.getElementById('markPrice').value || '—';const refCode=document.getElementById('refCode').value || 'x.com/bulktrade';const canvas=document.getElementById('previewCanvas');canvas.width=CARD_W;canvas.height=CARD_H;const ctx=canvas.getContext('2d');const drawBg=(bgImg)=>{const iw=bgImg.naturalWidth || bgImg.width;const ih=bgImg.naturalHeight || bgImg.height;const scale=Math.max(CARD_W/iw,CARD_H/ih);const dw=iw*scale,dh=ih*scale;const dx=(CARD_W-dw)/2,dy=(CARD_H-dh)/2;ctx.drawImage(bgImg,dx,dy,dw,dh);const overlay=ctx.createLinearGradient(0,0,0,CARD_H);overlay.addColorStop(0,'rgba(0,0,0,0.72)');overlay.addColorStop(0.5,'rgba(0,0,0,0.55)');overlay.addColorStop(1,'rgba(0,0,0,0.30)');ctx.fillStyle=overlay;ctx.fillRect(0,0,CARD_W,CARD_H);drawContent();};const drawContent=()=>{drawContentOnly(ctx,CARD_W,CARD_H);};const drawContentOnly=(ctx,CARD_W,CARD_H)=>{const isProfit=!pnl.startsWith('-');const pnlColor=isProfit ? '#00e8a2':'#ff4060';const dirColor=direction==='Long' ? '#00e8a2':'#ff4060';ctx.textAlign='left';ctx.shadowBlur=0;ctx.drawImage(logoImg,40,18,181,70);const pillX=48,pillY=118,pillH=42,pillR=8;ctx.font='400 24px "Roboto Condensed",sans-serif';const dirTxtW=ctx.measureText(direction).width;ctx.font='400 24px "Roboto Condensed",sans-serif';const levTxtW=ctx.measureText(` ${leverage}x`).width;const pillW=dirTxtW+levTxtW+28;ctx.beginPath();ctx.roundRect(pillX,pillY,pillW,pillH,pillR);ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=dirColor;ctx.font='400 24px "Roboto Condensed",sans-serif';ctx.fillText(direction,pillX+12,pillY+27);ctx.fillStyle='#ffffff';ctx.font='400 24px "Roboto Condensed",sans-serif';ctx.fillText(` ${leverage}x`,pillX+12+dirTxtW,pillY+27);ctx.fillStyle='#ffffff';ctx.font='400 28px "Roboto Condensed",sans-serif';ctx.fillText(pair,pillX+pillW+20,pillY+27);const pnlSize=pnl.length>13 ? 62:pnl.length>10 ? 72:82;ctx.font=`300 ${pnlSize}px "Share Tech Mono",monospace`;ctx.fillStyle=isProfit ? '#17C784':'#cc2244';ctx.letterSpacing='0px';ctx.shadowBlur=0;ctx.fillText(pnl,48,258);ctx.letterSpacing='0px';const details=[ ['Entry Price',entryP],['Mark Price',markP],['Referral code',refCode],];const detailStartY=370;details.forEach(([label,val],i)=>{const y=detailStartY+i*46;ctx.font='400 26px "Roboto",sans-serif';ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillText(label,48,y);ctx.font='400 26px "Roboto",sans-serif';ctx.fillStyle='#ffffff';ctx.fillText(val,248,y);});document.getElementById('emptyState').style.display='none';canvas.style.display='block';document.getElementById('btnDownload').classList.add('visible');};if(customBgDataUrl==='__video__'){
-  if(!videoEl){alert('Відео не завантажено!');return;}
-  const canvas=document.getElementById('previewCanvas');
-  canvas.width=CARD_W;canvas.height=CARD_H;
-  document.getElementById('emptyState').style.display='none';
-  canvas.style.display='block';
-  document.getElementById('btnDownload').classList.add('visible');
-  videoEl.currentTime=0;
-  videoEl.onseeked=()=>{
-    // draw one frame for preview
-    drawVideoFrame();
-    // start live preview loop
-    cancelAnimationFrame(animFrameId);
-    animFrameId=requestAnimationFrame(function loop(){drawVideoFrame();animFrameId=requestAnimationFrame(loop);});
-    videoEl.play();
-  };
-  return;
-} else if(customBgDataUrl){const img=new Image();img.crossOrigin='anonymous';img.onload=()=>drawBg(img);img.src=customBgDataUrl;}else{const bgArr=direction==='Short'?loadedShortBgImgs:loadedBgImgs;const bgImg=bgArr[selectedBg]||bgArr[0];if(bgImg.complete)drawBg(bgImg);else bgImg.onload=()=>drawBg(bgImg);}}window.addEventListener('load',()=>{renderBgThumbs();updateBgHoverColor();setDir(direction);});let urlMode='image';let videoEl=null;let animFrameId=null;let mediaRecorder=null;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BULK PnL Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --card: #121212;
+      --border: #2a2a2a;
+      --gold: #c8b882;
+      --green: #00e8a2;
+      --red: #ff4060;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      flex: 1;
+      min-width: 300px;
+    }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .field label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field input, .field select {
+      width: 100%;
+      background: #1e1e1e;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      padding: 12px 14px;
+      outline: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--gold);
+    }
+    .dir-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .dir-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+      background: #1e1e1e;
+      color: #666;
+    }
+    .dir-btn.active-long {
+      border-color: var(--green);
+      background: rgba(0, 232, 162, 0.1);
+      color: var(--green);
+    }
+    .dir-btn.active-short {
+      border-color: var(--red);
+      background: rgba(255, 64, 96, 0.1);
+      color: var(--red);
+    }
+    .pnl-row {
+      display: flex;
+      gap: 10px;
+    }
+    .pnl-row input { flex: 1; }
+    .pnl-row select { width: 70px; flex: none; }
+    .bg-grid {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .bg-thumb {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #888;
+      text-align: center;
+    }
+    .bg-thumb:hover {
+      border-color: var(--green);
+    }
+    .bg-thumb.selected {
+      border-color: var(--green);
+    }
+    .preview-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .preview-empty {
+      width: 325px;
+      height: 400px;
+      background: #1a1a1a;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      font-size: 14px;
+      text-align: center;
+      gap: 12px;
+    }
+    .preview-empty .icon {
+      font-size: 48px;
+      opacity: 0.5;
+    }
+    #previewCanvas {
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .btn-generate {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, #c8b882 0%, #a89862 100%);
+      border: none;
+      border-radius: 8px;
+      color: #0a0a0a;
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(200, 184, 130, 0.3);
+    }
+    .btn-download {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: transparent;
+      border: 1px solid var(--green);
+      border-radius: 8px;
+      color: var(--green);
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s;
+    }
+    .btn-download.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .import-section {
+      background: rgba(200, 184, 130, 0.05);
+      border: 1px solid rgba(200, 184, 130, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .mode-btns {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 7px;
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #1e1e1e;
+      color: #666;
+    }
+    .mode-btn.active-img {
+      border-color: var(--green);
+      background: rgba(0, 232, 162, 0.12);
+      color: var(--green);
+    }
+    .mode-btn.active-vid {
+      border-color: var(--red);
+      background: rgba(255, 64, 96, 0.12);
+      color: var(--red);
+    }
+    .upload-label {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #1e1e1e;
+      border: 1px dashed #444;
+      border-radius: 8px;
+      color: #888;
+      font-size: 12px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .hint {
+      font-size: 10px;
+      color: #444;
+      letter-spacing: 1px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+    .hint b { color: #666; }
+    .hint b.light { color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h2>✦ Trade Data</h2>
+      
+      <!-- Import Section -->
+      <div class="import-section">
+        <div style="font-size:11px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:8px;">Import from Bulk Card</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="importUrl" type="text" placeholder="Paste image URL..." style="flex:1;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;">
+          <label style="display:flex;align-items:center;justify-content:center;padding:10px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:12px;cursor:pointer;white-space:nowrap;">
+            📁
+            <input type="file" accept="image/*" style="display:none;" onchange="importFromFile(event)">
+          </label>
+        </div>
+        <button onclick="importFromUrl()" style="width:100%;padding:10px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-family:'Playfair Display',serif;font-size:15px;letter-spacing:2px;cursor:pointer;">✦ IMPORT & AUTOFILL</button>
+        <div id="importStatus" style="font-size:12px;color:#555;letter-spacing:1px;margin-top:6px;text-align:center;padding:6px;border-radius:6px;display:none;"></div>
+      </div>
 
-function setUrlMode(mode){
-  urlMode=mode;
-  const imgBtn=document.getElementById('modeImg');
-  const vidBtn=document.getElementById('modeVid');
-  const imgMode=document.getElementById('imageMode');
-  const vidMode=document.getElementById('videoMode');
-  if(mode==='image'){
-    imgBtn.style.cssText='flex:1;padding:7px;border-radius:6px;border:1px solid #00e8a2;background:rgba(0,232,162,0.12);color:#00e8a2;font-family:Inter,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;';
-    vidBtn.style.cssText='flex:1;padding:7px;border-radius:6px;border:1px solid #2a2a2a;background:#1e1e1e;color:#666;font-family:Inter,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;';
-    imgMode.style.display='block';vidMode.style.display='none';
+      <div class="field">
+        <label>Direction</label>
+        <div class="dir-btns">
+          <button class="dir-btn active-long" id="btnLong" onclick="setDir('Long')">LONG</button>
+          <button class="dir-btn" id="btnShort" onclick="setDir('Short')">SHORT</button>
+        </div>
+      </div>
+      
+      <div class="field">
+        <label>Leverage</label>
+        <input type="number" id="leverage" value="20" min="1" max="50">
+      </div>
+      
+      <div class="field">
+        <label>Trading Pair</label>
+        <select id="pair">
+          <option value="SOL-USD">SOL-USD</option>
+          <option value="BTC-USD">BTC-USD</option>
+          <option value="ETH-USD">ETH-USD</option>
+          <option value="DOGE-USD">DOGE-USD</option>
+          <option value="XRP-USD">XRP-USD</option>
+          <option value="LINK-USD">LINK-USD</option>
+          <option value="AVAX-USD">AVAX-USD</option>
+          <option value="ADA-USD">ADA-USD</option>
+        </select>
+      </div>
+      
+      <div class="field">
+        <label>PnL Value</label>
+        <div class="pnl-row">
+          <input type="text" id="pnlValue" placeholder="50000" value="50000">
+          <select id="pnlType">
+            <option value="$">$</option>
+            <option value="%">%</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="field">
+        <label>Entry Price</label>
+        <input type="text" id="entryPrice" placeholder="70000.00">
+      </div>
+      
+      <div class="field">
+        <label>Mark Price</label>
+        <input type="text" id="markPrice" placeholder="75000.00">
+      </div>
+      
+      <div class="field">
+        <label>Referral Code</label>
+        <input type="text" id="refCode" value="x.com/bulktrade">
+      </div>
+      
+      <div class="field">
+        <label>Background</label>
+        <div class="bg-grid" id="bgGrid">
+          <div class="bg-thumb selected" data-idx="0" onclick="selectBg(0)" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">Dark Blue</div>
+          <div class="bg-thumb" data-idx="1" onclick="selectBg(1)" style="background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);">Black</div>
+          <div class="bg-thumb" data-idx="2" onclick="selectBg(2)" style="background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 100%);">Purple</div>
+          <div class="bg-thumb" data-idx="3" onclick="selectBg(3)" style="background: linear-gradient(135deg, #0a1a0a 0%, #1b3d1b 100%);">Green</div>
+          <div class="bg-thumb" id="urlThumb" style="background:#1e1e1e;">🔗 URL</div>
+        </div>
+        
+        <div class="mode-btns">
+          <button onclick="setUrlMode('image')" id="modeImg" class="mode-btn active-img">🖼 IMAGE</button>
+          <button onclick="setUrlMode('video')" id="modeVid" class="mode-btn">🎬 VIDEO</button>
+        </div>
+        
+        <div id="imageMode">
+          <input id="urlInput" type="text" placeholder="Paste image URL..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:6px;" oninput="loadUrlBg(this.value)">
+          <div id="pasteHint" style="font-size:11px;color:#555;letter-spacing:1px;text-align:center;">CTRL+V — PASTE IMAGE FROM CLIPBOARD</div>
+          <div class="hint">💡 <b>HOW TO USE:</b><br>1. Right-click any image → Copy image<br>2. Press <b class="light">Ctrl+V</b> anywhere on this page<br>3. Or paste a direct image URL above</div>
+        </div>
+        
+        <div id="videoMode" style="display:none;">
+          <input id="videoUrlInput" type="text" placeholder="Paste video URL (mp4, webm)..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:8px;" onchange="loadVideoBg(this.value)">
+          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">— OR —</div>
+          <label class="upload-label">
+            📁 UPLOAD FROM DEVICE
+            <input type="file" accept="video/*" style="display:none;" onchange="loadVideoFile(event)">
+          </label>
+          <div class="hint">💡 <b>HOW TO USE:</b><br>1. Paste a direct video URL above<br>2. Or upload a video from your device<br>3. Hit <b class="light">GENERATE</b> to preview<br>4. Hit <b style="color:#ff4060;">RECORD & SAVE</b> to export .webm</div>
+          <div id="videoStatus" style="font-size:11px;color:#555;letter-spacing:1px;margin-top:8px;text-align:center;"></div>
+          <button onclick="startVideoRecord()" id="btnRecord" style="display:none;width:100%;padding:10px;margin-top:8px;background:#ff4060;color:#fff;border:none;border-radius:8px;font-family:'Playfair Display',serif;font-size:16px;letter-spacing:2px;cursor:pointer;">⏺ RECORD & SAVE</button>
+          <div id="recordStatus" style="font-size:11px;color:#555;letter-spacing:1px;margin-top:6px;text-align:center;"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="panel preview-wrap">
+      <h2>Preview</h2>
+      <div class="preview-empty" id="emptyState">
+        <span class="icon">📊</span>
+        <span>Fill in your trade data<br>and hit GENERATE</span>
+      </div>
+      <canvas id="previewCanvas" style="display:none"></canvas>
+      <button class="btn-generate" onclick="generate()">GENERATE CARD</button>
+      <button class="btn-download" id="btnDownload" onclick="downloadCard()">⬇ DOWNLOAD</button>
+    </div>
+  </div>
+
+<script>
+const CARD_W = 650, CARD_H = 800;
+const logoImg = new Image();
+logoImg.src = 'data:image/svg+xml,' + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="181" height="70" viewBox="0 0 181 70">
+  <text x="10" y="50" font-family="Playfair Display, serif" font-size="48" font-weight="600" fill="#c8b882">BULK</text>
+</svg>
+`);
+
+let direction = 'Long';
+let selectedBg = 0;
+let customBgDataUrl = null;
+let videoEl = null;
+let animFrameId = null;
+let mediaRecorder = null;
+let urlMode = 'image';
+
+// Gradient backgrounds (no images)
+const bgGradients = [
+  ['#1a1a2e', '#16213e'],  // Dark Blue
+  ['#0f0f0f', '#1a1a1a'],  // Black
+  ['#1a0a2e', '#2d1b4e'],  // Purple
+  ['#0a1a0a', '#1b3d1b']   // Green
+];
+
+function setDir(d) {
+  direction = d;
+  document.getElementById('btnLong').className = 'dir-btn' + (d === 'Long' ? ' active-long' : '');
+  document.getElementById('btnShort').className = 'dir-btn' + (d === 'Short' ? ' active-short' : '');
+}
+
+function selectBg(idx) {
+  selectedBg = idx;
+  customBgDataUrl = null;
+  document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
+  const thumb = document.querySelector(`.bg-thumb[data-idx="${idx}"]`);
+  if (thumb) thumb.classList.add('selected');
+  document.getElementById('urlThumb').classList.remove('selected');
+}
+
+function setUrlMode(mode) {
+  urlMode = mode;
+  const imgBtn = document.getElementById('modeImg');
+  const vidBtn = document.getElementById('modeVid');
+  const imgMode = document.getElementById('imageMode');
+  const vidMode = document.getElementById('videoMode');
+  
+  if (mode === 'image') {
+    imgBtn.className = 'mode-btn active-img';
+    vidBtn.className = 'mode-btn';
+    imgMode.style.display = 'block';
+    vidMode.style.display = 'none';
   } else {
-    vidBtn.style.cssText='flex:1;padding:7px;border-radius:6px;border:1px solid #ff4060;background:rgba(255,64,96,0.12);color:#ff4060;font-family:Inter,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;';
-    imgBtn.style.cssText='flex:1;padding:7px;border-radius:6px;border:1px solid #2a2a2a;background:#1e1e1e;color:#666;font-family:Inter,sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;';
-    imgMode.style.display='none';vidMode.style.display='block';
+    vidBtn.className = 'mode-btn active-vid';
+    imgBtn.className = 'mode-btn';
+    imgMode.style.display = 'none';
+    vidMode.style.display = 'block';
   }
 }
 
-function loadVideoBg(url){
-  if(!url)return;
+function loadUrlBg(url) {
+  if (!url) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    customBgDataUrl = url;
+    document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
+    document.getElementById('urlThumb').classList.add('selected');
+  };
+  img.onerror = () => {};
+  img.src = url;
+}
+
+function loadVideoBg(url) {
+  if (!url) return;
   setupVideo(url);
 }
 
-function loadVideoFile(e){
-  const file=e.target.files[0];
-  if(!file)return;
-  const status=document.getElementById('videoStatus');
-  status.textContent='Reading file...';
-  status.style.color='#888';
-  const reader=new FileReader();
-  reader.onload=ev=>{setupVideo(ev.target.result,true);};
-  reader.onerror=()=>{status.textContent='✗ Failed to read file';status.style.color='#ff4060';};
+function loadVideoFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const status = document.getElementById('videoStatus');
+  status.textContent = 'Reading file...';
+  status.style.color = '#888';
+  const reader = new FileReader();
+  reader.onload = ev => { setupVideo(ev.target.result, true); };
+  reader.onerror = () => { status.textContent = '✗ Failed to read file'; status.style.color = '#ff4060'; };
   reader.readAsDataURL(file);
 }
 
-function setupVideo(src,isLocal){
-  if(videoEl){videoEl.pause();cancelAnimationFrame(animFrameId);}
-  videoEl=document.createElement('video');
-  if(!isLocal)videoEl.crossOrigin='anonymous';
-  videoEl.src=src;
-  videoEl.loop=false;
-  videoEl.muted=true;
-  videoEl.playsInline=true;
-  const status=document.getElementById('videoStatus');
-  const btn=document.getElementById('btnRecord');
-  status.textContent='Loading...';
-  status.style.color='#888';
-  videoEl.onloadeddata=()=>{
-    status.textContent='✓ Video ready. Fill in the fields and hit GENERATE — then RECORD & SAVE';
-    status.style.color='#00e8a2';
-    btn.style.display='block';
-    customBgDataUrl='__video__';
-    document.querySelectorAll('.bg-thumb[data-idx]').forEach(el=>el.classList.remove('selected'));
+function setupVideo(src, isLocal) {
+  if (videoEl) { videoEl.pause(); cancelAnimationFrame(animFrameId); }
+  videoEl = document.createElement('video');
+  if (!isLocal) videoEl.crossOrigin = 'anonymous';
+  videoEl.src = src;
+  videoEl.loop = false;
+  videoEl.muted = true;
+  videoEl.playsInline = true;
+  const status = document.getElementById('videoStatus');
+  const btn = document.getElementById('btnRecord');
+  status.textContent = 'Loading...';
+  status.style.color = '#888';
+  videoEl.onloadeddata = () => {
+    status.textContent = '✓ Video ready. Fill in the fields and hit GENERATE — then RECORD & SAVE';
+    status.style.color = '#00e8a2';
+    btn.style.display = 'block';
+    customBgDataUrl = '__video__';
+    document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
     document.getElementById('urlThumb').classList.add('selected');
   };
-  videoEl.onerror=(e)=>{
-    console.error('Video error:',videoEl.error);
-    status.textContent='✗ Помилка: '+(videoEl.error?videoEl.error.message:'невідома');
-    status.style.color='#ff4060';
+  videoEl.onerror = () => {
+    status.textContent = '✗ Error loading video';
+    status.style.color = '#ff4060';
   };
-  videoEl.onabort=()=>{status.textContent='✗ Loading aborted';status.style.color='#ff4060';};
 }
 
-function drawVideoFrame(){
-  const canvas=document.getElementById('previewCanvas');
-  if(!canvas||!videoEl)return;
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const vw=videoEl.videoWidth,vh=videoEl.videoHeight;
-  if(!vw||!vh)return;
-  const scale=Math.max(canvas.width/vw,canvas.height/vh);
-  const dw=vw*scale,dh=vh*scale;
-  const dx=(canvas.width-dw)/2,dy=(canvas.height-dh)/2;
-  ctx.drawImage(videoEl,dx,dy,dw,dh);
-  const overlay=ctx.createLinearGradient(0,0,0,canvas.height);
-  overlay.addColorStop(0,'rgba(0,0,0,0.72)');
-  overlay.addColorStop(0.5,'rgba(0,0,0,0.55)');
-  overlay.addColorStop(1,'rgba(0,0,0,0.30)');
-  ctx.fillStyle=overlay;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  drawOverlayText(ctx,canvas.width,canvas.height);
+function formatPnl(input) {
+  if (input.includes('$') || input.includes('%')) return input;
+  const isNeg = input.startsWith('-');
+  const num = parseFloat(input.replace(/[^0-9.]/g, ''));
+  if (isNaN(num)) return input;
+  const formatted = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (isNeg ? '-' : '+') + '$' + formatted;
 }
 
-function drawOverlayText(ctx,W,H){
-  const leverage=document.getElementById('leverage').value||'1';
-  const pair=document.getElementById('pair').value||'SOL-USD';
-  let rawPnl=document.getElementById('pnl').value||'+$0.00';
-  let pnl=formatPnl(rawPnl);
-  if(direction==='Short'){const wasPos=!pnl.startsWith('-');if(wasPos)pnl='-'+pnl.replace(/^\+/,'');else pnl='+'+pnl.replace(/^-/,'');}
-  const entryP=document.getElementById('entryPrice').value||'—';
-  const markP=document.getElementById('markPrice').value||'—';
-  const refCode=document.getElementById('refCode').value||'x.com/bulktrade';
-  const isProfit=!pnl.startsWith('-');
-  const dirColor=direction==='Long'?'#00e8a2':'#ff4060';
-  ctx.drawImage(logoImg,40,18,181,70);
-  const pillX=48,pillY=118,pillH=42,pillR=8;
-  ctx.font='400 24px "Roboto Condensed",sans-serif';
-  const dirTxtW=ctx.measureText(direction).width;
-  const levTxtW=ctx.measureText(' '+leverage+'x').width;
-  const pillW=dirTxtW+levTxtW+28;
-  ctx.beginPath();ctx.roundRect(pillX,pillY,pillW,pillH,pillR);
-  ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=2;ctx.stroke();
-  ctx.fillStyle=dirColor;ctx.font='400 24px "Roboto Condensed",sans-serif';ctx.fillText(direction,pillX+12,pillY+27);
-  ctx.fillStyle='#fff';ctx.fillText(' '+leverage+'x',pillX+12+dirTxtW,pillY+27);
-  ctx.fillStyle='#fff';ctx.font='400 28px "Roboto Condensed",sans-serif';ctx.fillText(pair,pillX+pillW+20,pillY+27);
-  const pnlSize=pnl.length>13?62:pnl.length>10?72:82;
-  ctx.font='300 '+pnlSize+'px "Share Tech Mono",monospace';
-  ctx.fillStyle=isProfit?'#17C784':'#cc2244';
-  ctx.fillText(pnl,48,258);
-  const details=[['Entry Price',entryP],['Mark Price',markP],['Referral code',refCode]];
-  const detailStartY=370;
-  details.forEach(([label,val],i)=>{
-    const y=detailStartY+i*46;
-    ctx.font='400 26px "Roboto",sans-serif';ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fillText(label,48,y);
-    ctx.fillStyle='#fff';ctx.fillText(val,248,y);
+function generate() {
+  cancelAnimationFrame(animFrameId);
+  
+  const leverage = document.getElementById('leverage').value || '1';
+  const pair = document.getElementById('pair').value || 'SOL-USD';
+  const pnlVal = document.getElementById('pnlValue').value || '0';
+  const pnlType = document.getElementById('pnlType').value;
+  
+  let pnl = (pnlVal.startsWith('-') ? '' : '+') + 
+    (pnlType === '$' ? '$' + parseFloat(pnlVal.replace(/[^0-9.]/g, '')).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+    : parseFloat(pnlVal.replace(/[^0-9.]/g, '')).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%');
+  
+  if (pnlVal.startsWith('-')) {
+    pnl = '-' + (pnlType === '$' ? '$' : '') + 
+      parseFloat(pnlVal.replace(/[^0-9.]/g, '')).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 
+      (pnlType === '%' ? '%' : '');
+  }
+  
+  if (direction === 'Short') {
+    const wasPos = !pnl.startsWith('-');
+    if (wasPos) pnl = '-' + pnl.replace(/^\+/, '');
+    else pnl = '+' + pnl.replace(/^-/, '');
+  }
+  
+  const entryP = document.getElementById('entryPrice').value || '—';
+  const markP = document.getElementById('markPrice').value || '—';
+  const refCode = document.getElementById('refCode').value || 'x.com/bulktrade';
+  
+  const canvas = document.getElementById('previewCanvas');
+  canvas.width = CARD_W;
+  canvas.height = CARD_H;
+  const ctx = canvas.getContext('2d');
+  
+  // Handle video background
+  if (customBgDataUrl === '__video__') {
+    if (!videoEl) { alert('Video not loaded!'); return; }
+    document.getElementById('emptyState').style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('btnDownload').classList.add('visible');
+    videoEl.currentTime = 0;
+    videoEl.onseeked = () => {
+      drawVideoFrame();
+      cancelAnimationFrame(animFrameId);
+      animFrameId = requestAnimationFrame(function loop() { drawVideoFrame(); animFrameId = requestAnimationFrame(loop); });
+      videoEl.play();
+    };
+    return;
+  }
+  
+  const drawContent = () => {
+    const isProfit = !pnl.startsWith('-');
+    const pnlColor = isProfit ? '#00e8a2' : '#ff4060';
+    const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
+    
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 0;
+    
+    // Logo
+    ctx.drawImage(logoImg, 40, 18, 181, 70);
+    
+    // Direction pill
+    const pillX = 48, pillY = 118, pillH = 42, pillR = 8;
+    ctx.font = '400 24px "Roboto Condensed", sans-serif';
+    const dirTxtW = ctx.measureText(direction).width;
+    const levTxtW = ctx.measureText(` ${leverage}x`).width;
+    const pillW = dirTxtW + levTxtW + 28;
+    
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.fillStyle = dirColor;
+    ctx.fillText(direction, pillX + 12, pillY + 27);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(` ${leverage}x`, pillX + 12 + dirTxtW, pillY + 27);
+    
+    // Pair
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '400 28px "Roboto Condensed", sans-serif';
+    ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
+    
+    // PnL
+    const pnlSize = pnl.length > 13 ? 62 : pnl.length > 10 ? 72 : 82;
+    ctx.font = `300 ${pnlSize}px "Share Tech Mono", monospace`;
+    ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
+    ctx.fillText(pnl, 48, 258);
+    
+    // Details
+    const details = [
+      ['Entry Price', entryP],
+      ['Mark Price', markP],
+      ['Referral code', refCode]
+    ];
+    const detailStartY = 370;
+    details.forEach(([label, val], i) => {
+      const y = detailStartY + i * 46;
+      ctx.font = '400 26px "Roboto", sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText(label, 48, y);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(val, 248, y);
+    });
+    
+    document.getElementById('emptyState').style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('btnDownload').classList.add('visible');
+  };
+  
+  const drawBg = (bgImg) => {
+    const iw = bgImg.naturalWidth || bgImg.width;
+    const ih = bgImg.naturalHeight || bgImg.height;
+    const scale = Math.max(CARD_W / iw, CARD_H / ih);
+    const dw = iw * scale, dh = ih * scale;
+    const dx = (CARD_W - dw) / 2, dy = (CARD_H - dh) / 2;
+    ctx.drawImage(bgImg, dx, dy, dw, dh);
+    
+    // Overlay
+    const overlay = ctx.createLinearGradient(0, 0, 0, CARD_H);
+    overlay.addColorStop(0, 'rgba(0,0,0,0.72)');
+    overlay.addColorStop(0.5, 'rgba(0,0,0,0.55)');
+    overlay.addColorStop(1, 'rgba(0,0,0,0.30)');
+    ctx.fillStyle = overlay;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+    
+    drawContent();
+  };
+  
+  const drawGradientBg = () => {
+    const gradient = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
+    gradient.addColorStop(0, bgGradients[selectedBg][0]);
+    gradient.addColorStop(1, bgGradients[selectedBg][1]);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+    
+    // Overlay
+    const overlay = ctx.createLinearGradient(0, 0, 0, CARD_H);
+    overlay.addColorStop(0, 'rgba(0,0,0,0.3)');
+    overlay.addColorStop(0.5, 'rgba(0,0,0,0.2)');
+    overlay.addColorStop(1, 'rgba(0,0,0,0.1)');
+    ctx.fillStyle = overlay;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+    
+    drawContent();
+  };
+  
+  if (customBgDataUrl && customBgDataUrl !== '__video__') {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => drawBg(img);
+    img.src = customBgDataUrl;
+  } else {
+    drawGradientBg();
+  }
+}
+
+function drawVideoFrame() {
+  const canvas = document.getElementById('previewCanvas');
+  if (!canvas || !videoEl) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
+  if (!vw || !vh) return;
+  const scale = Math.max(canvas.width / vw, canvas.height / vh);
+  const dw = vw * scale, dh = vh * scale;
+  const dx = (canvas.width - dw) / 2, dy = (canvas.height - dh) / 2;
+  ctx.drawImage(videoEl, dx, dy, dw, dh);
+  
+  // Overlay
+  const overlay = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  overlay.addColorStop(0, 'rgba(0,0,0,0.72)');
+  overlay.addColorStop(0.5, 'rgba(0,0,0,0.55)');
+  overlay.addColorStop(1, 'rgba(0,0,0,0.30)');
+  ctx.fillStyle = overlay;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  drawOverlayText(ctx, canvas.width, canvas.height);
+}
+
+function drawOverlayText(ctx, W, H) {
+  const leverage = document.getElementById('leverage').value || '1';
+  const pair = document.getElementById('pair').value || 'SOL-USD';
+  const pnlVal = document.getElementById('pnlValue').value || '0';
+  const pnlType = document.getElementById('pnlType').value;
+  
+  let pnl = formatPnl(pnlVal);
+  if (direction === 'Short') {
+    const wasPos = !pnl.startsWith('-');
+    if (wasPos) pnl = '-' + pnl.replace(/^\+/, '');
+    else pnl = '+' + pnl.replace(/^-/, '');
+  }
+  
+  const entryP = document.getElementById('entryPrice').value || '—';
+  const markP = document.getElementById('markPrice').value || '—';
+  const refCode = document.getElementById('refCode').value || 'x.com/bulktrade';
+  
+  const isProfit = !pnl.startsWith('-');
+  const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
+  
+  ctx.drawImage(logoImg, 40, 18, 181, 70);
+  
+  const pillX = 48, pillY = 118, pillH = 42, pillR = 8;
+  ctx.font = '400 24px "Roboto Condensed", sans-serif';
+  const dirTxtW = ctx.measureText(direction).width;
+  const levTxtW = ctx.measureText(' ' + leverage + 'x').width;
+  const pillW = dirTxtW + levTxtW + 28;
+  
+  ctx.beginPath();
+  ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  ctx.fillStyle = dirColor;
+  ctx.fillText(direction, pillX + 12, pillY + 27);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(' ' + leverage + 'x', pillX + 12 + dirTxtW, pillY + 27);
+  ctx.fillStyle = '#fff';
+  ctx.font = '400 28px "Roboto Condensed", sans-serif';
+  ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
+  
+  const pnlSize = pnl.length > 13 ? 62 : pnl.length > 10 ? 72 : 82;
+  ctx.font = '300 ' + pnlSize + 'px "Share Tech Mono", monospace';
+  ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
+  ctx.fillText(pnl, 48, 258);
+  
+  const details = [['Entry Price', entryP], ['Mark Price', markP], ['Referral code', refCode]];
+  const detailStartY = 370;
+  details.forEach(([label, val], i) => {
+    const y = detailStartY + i * 46;
+    ctx.font = '400 26px "Roboto", sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(label, 48, y);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(val, 248, y);
   });
 }
 
-function startVideoRecord(){
-  if(!videoEl){alert('Please upload a video first!');return;}
-  const canvas=document.getElementById('previewCanvas');
-  canvas.width=650;canvas.height=800;
-  const status=document.getElementById('recordStatus');
-  const btn=document.getElementById('btnRecord');
-  btn.disabled=true;btn.textContent='⏺ ЗАПИС...';btn.style.background='#aa0000';
-  videoEl.currentTime=0;
+function startVideoRecord() {
+  if (!videoEl) { alert('Please upload a video first!'); return; }
+  const canvas = document.getElementById('previewCanvas');
+  canvas.width = 650;
+  canvas.height = 800;
+  const status = document.getElementById('recordStatus');
+  const btn = document.getElementById('btnRecord');
+  btn.disabled = true;
+  btn.textContent = '⏺ RECORDING...';
+  btn.style.background = '#aa0000';
+  videoEl.currentTime = 0;
   videoEl.play();
-  const stream=canvas.captureStream(30);
-  let mimeType='video/webm;codecs=vp9';
-  if(!MediaRecorder.isTypeSupported(mimeType))mimeType='video/webm';
-  mediaRecorder=new MediaRecorder(stream,{mimeType});
-  const chunks=[];
-  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-  mediaRecorder.onstop=()=>{
+  
+  const stream = canvas.captureStream(30);
+  let mimeType = 'video/webm;codecs=vp9';
+  if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+  mediaRecorder = new MediaRecorder(stream, { mimeType });
+  const chunks = [];
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  mediaRecorder.onstop = () => {
     cancelAnimationFrame(animFrameId);
-    const blob=new Blob(chunks,{type:'video/webm'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download='bulk-pnl-video.webm';a.click();
-    btn.disabled=false;btn.textContent='⏺ RECORD & SAVE';btn.style.background='#ff4060';
-    status.textContent='✓ Video saved!';status.style.color='#00e8a2';
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bulk-pnl-video.webm';
+    a.click();
+    btn.disabled = false;
+    btn.textContent = '⏺ RECORD & SAVE';
+    btn.style.background = '#ff4060';
+    status.textContent = '✓ Video saved!';
+    status.style.color = '#00e8a2';
   };
-  const duration=Math.min(videoEl.duration||20,20)*1000;
+  
+  const duration = Math.min(videoEl.duration || 20, 20) * 1000;
   mediaRecorder.start();
-  status.textContent='Recording...';status.style.color='#ff4060';
-  animFrameId=requestAnimationFrame(function loop(){drawVideoFrame();animFrameId=requestAnimationFrame(loop);});
-  videoEl.onended=()=>{if(mediaRecorder.state==='recording'){mediaRecorder.stop();videoEl.pause();}};
-  setTimeout(()=>{if(mediaRecorder&&mediaRecorder.state==='recording'){mediaRecorder.stop();videoEl.pause();}},duration+500);
+  status.textContent = 'Recording...';
+  status.style.color = '#ff4060';
+  animFrameId = requestAnimationFrame(function loop() { drawVideoFrame(); animFrameId = requestAnimationFrame(loop); });
+  videoEl.onended = () => { if (mediaRecorder.state === 'recording') { mediaRecorder.stop(); videoEl.pause(); } };
+  setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); videoEl.pause(); } }, duration + 500);
 }
 
-document.addEventListener('paste',function(e){const items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(let i=0;i<items.length;i++){if(items[i].type.startsWith('image/')){const file=items[i].getAsFile();const reader=new FileReader();reader.onload=ev=>{
-  const imgData=ev.target.result;
-  // Try to analyze as PnL card first
-  const status=document.getElementById('importStatus');
-  if(status){status.style.display='block';status.style.color='#c8b882';status.textContent='Analyzing pasted image...';}
-  analyzeCardSmart(imgData);
-};reader.readAsDataURL(file);e.preventDefault();break;}}});
-
-async function analyzeCardSmart(imgData){
+function downloadCard() {
+  const canvas = document.getElementById('previewCanvas');
   try {
-    const mediaType=imgData.split(';')[0].split(':')[1]||'image/png';
-    const response=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:500,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:mediaType,data:imgData.split(',')[1]}},
-          {type:'text',text:`Is this a Bulk PnL trading card (showing BULK logo, direction Long/Short, leverage, trading pair, PnL amount, Entry Price, Mark Price)? If YES, extract data as JSON only:
+    const link = document.createElement('a');
+    link.download = 'bulk-pnl-card.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('Could not download: ' + e.message + '. Try right-click on the card → Save image.');
+  }
+}
+
+// Paste handler
+document.addEventListener('paste', function(e) {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.startsWith('image/')) {
+      const file = items[i].getAsFile();
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const imgData = ev.target.result;
+        const status = document.getElementById('importStatus');
+        if (status) {
+          status.style.display = 'block';
+          status.style.color = '#c8b882';
+          status.textContent = 'Analyzing pasted image...';
+        }
+        analyzeCardSmart(imgData);
+      };
+      reader.readAsDataURL(file);
+      e.preventDefault();
+      break;
+    }
+  }
+});
+
+async function analyzeCardSmart(imgData) {
+  try {
+    const mediaType = imgData.split(';')[0].split(':')[1] || 'image/png';
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imgData.split(',')[1] } },
+            { type: 'text', text: `Is this a Bulk PnL trading card (showing BULK logo, direction Long/Short, leverage, trading pair, PnL amount, Entry Price, Mark Price)? If YES, extract data as JSON only:
 {"direction":"Long","leverage":20,"pair":"SOL-USD","pnl":"50000","pnlType":"$","entryPrice":"70000","markPrice":"71000","referralCode":"x.com/bulktrade"}
-If NO (regular photo, meme, screenshot of something else), respond with exactly: NOT_A_CARD`}
-        ]}]
+If NO (regular photo, meme, screenshot of something else), respond with exactly: NOT_A_CARD` }
+          ]
+        }]
       })
     });
-    const data=await response.json();
-    if(data.error){setAsBg(imgData);return;}
-    const text=(data.content.find(c=>c.type==='text')||data.content[0])?.text||'';
-    if(text.trim()==='NOT_A_CARD'||text.includes('NOT_A_CARD')){
-      // Not a PnL card - use as background
+    const data = await response.json();
+    if (data.error) { setAsBg(imgData); return; }
+    const text = (data.content.find(c => c.type === 'text') || data.content[0])?.text || '';
+    if (text.trim() === 'NOT_A_CARD' || text.includes('NOT_A_CARD')) {
       setAsBg(imgData);
       return;
     }
     let parsed;
-    try{parsed=JSON.parse(text.replace(/```json[\n]?|```/g,'').trim());}
-    catch(e){setAsBg(imgData);return;}
-    // Fill fields
-    customBgDataUrl=null;
-    videoEl=null;
+    try { parsed = JSON.parse(text.replace(/```json[\n]?|```/g, '').trim()); }
+    catch (e) { setAsBg(imgData); return; }
+    
+    customBgDataUrl = null;
+    videoEl = null;
     cancelAnimationFrame(animFrameId);
-    const canvas=document.getElementById('previewCanvas');
-    canvas.style.display='none';
-    document.getElementById('emptyState').style.display='flex';
+    const canvas = document.getElementById('previewCanvas');
+    canvas.style.display = 'none';
+    document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('btnDownload').classList.remove('visible');
-    if(parsed.direction)setDir(parsed.direction);
-    if(parsed.leverage)document.getElementById('leverage').value=Math.min(parsed.leverage,50);
-    if(parsed.pair){const sel=document.getElementById('pair');for(let o of sel.options){if(o.value===parsed.pair){sel.value=parsed.pair;break;}}}
-    if(parsed.pnl)document.getElementById('pnlValue').value=parsed.pnl;
-    if(parsed.pnlType)document.getElementById('pnlType').value=parsed.pnlType;
-    if(parsed.entryPrice)document.getElementById('entryPrice').value=parsed.entryPrice;
-    if(parsed.markPrice)document.getElementById('markPrice').value=parsed.markPrice;
-    if(parsed.referralCode)document.getElementById('refCode').value=parsed.referralCode;
-    const status=document.getElementById('importStatus');
-    if(status){status.style.display='block';status.style.color='#00e8a2';status.textContent='✓ Fields filled! Choose a background and hit GENERATE';}
-  } catch(err){setAsBg(imgData);}
+    
+    if (parsed.direction) setDir(parsed.direction);
+    if (parsed.leverage) document.getElementById('leverage').value = Math.min(parsed.leverage, 50);
+    if (parsed.pair) {
+      const sel = document.getElementById('pair');
+      for (let o of sel.options) {
+        if (o.value === parsed.pair) { sel.value = parsed.pair; break; }
+      }
+    }
+    if (parsed.pnl) document.getElementById('pnlValue').value = parsed.pnl;
+    if (parsed.pnlType) document.getElementById('pnlType').value = parsed.pnlType;
+    if (parsed.entryPrice) document.getElementById('entryPrice').value = parsed.entryPrice;
+    if (parsed.markPrice) document.getElementById('markPrice').value = parsed.markPrice;
+    if (parsed.referralCode) document.getElementById('refCode').value = parsed.referralCode;
+    
+    const status = document.getElementById('importStatus');
+    if (status) {
+      status.style.display = 'block';
+      status.style.color = '#00e8a2';
+      status.textContent = '✓ Fields filled! Choose a background and hit GENERATE';
+    }
+  } catch (err) { setAsBg(imgData); }
 }
 
-function setAsBg(imgData){
-  customBgDataUrl=imgData;
-  document.querySelectorAll('.bg-thumb[data-idx]').forEach(el=>el.classList.remove('selected'));
-  const urlThumb=document.getElementById('urlThumb');if(urlThumb)urlThumb.classList.add('selected');
-  const hint=document.getElementById('pasteHint');
-  if(hint){hint.style.color='#00e8a2';hint.textContent='✓ IMAGE PASTED!';}
-  const wrap=document.getElementById('urlInputWrap');if(wrap)wrap.style.display='block';
-  const status=document.getElementById('importStatus');
-  if(status){status.style.display='none';}
-}function showImportStatus(msg, color){
-  const el=document.getElementById('importStatus');
-  el.textContent=msg;
-  el.style.color=color||'#888';
-  el.style.display='block';
+function setAsBg(imgData) {
+  customBgDataUrl = imgData;
+  document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
+  const urlThumb = document.getElementById('urlThumb');
+  if (urlThumb) urlThumb.classList.add('selected');
+  const hint = document.getElementById('pasteHint');
+  if (hint) { hint.style.color = '#00e8a2'; hint.textContent = '✓ IMAGE PASTED!'; }
+  const status = document.getElementById('importStatus');
+  if (status) { status.style.display = 'none'; }
 }
 
-async function importFromFile(e){
-  const file=e.target.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{analyzeCard(ev.target.result,true);};
+function showImportStatus(msg, color) {
+  const el = document.getElementById('importStatus');
+  el.textContent = msg;
+  el.style.color = color || '#888';
+  el.style.display = 'block';
+}
+
+async function importFromFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { analyzeCard(ev.target.result, true); };
   reader.readAsDataURL(file);
 }
 
-async function importFromUrl(){
-  const url=document.getElementById('importUrl').value.trim();
-  if(!url){showImportStatus('Please enter an image URL','#ff4060');return;}
-  analyzeCard(url,false);
+async function importFromUrl() {
+  const url = document.getElementById('importUrl').value.trim();
+  if (!url) { showImportStatus('Please enter an image URL', '#ff4060'); return; }
+  analyzeCard(url, false);
 }
 
-async function analyzeCard(imageData, isBase64){
-  showImportStatus('Analyzing card...','#c8b882');
+async function analyzeCard(imageData, isBase64) {
+  showImportStatus('Analyzing card...', '#c8b882');
   try {
     const imageContent = isBase64
-      ? {type:'image',source:{type:'base64',media_type:imageData.split(';')[0].split(':')[1]||'image/jpeg',data:imageData.split(',')[1]}}
-      : {type:'image',source:{type:'url',url:imageData}};
+      ? { type: 'image', source: { type: 'base64', media_type: imageData.split(';')[0].split(':')[1] || 'image/jpeg', data: imageData.split(',')[1] } }
+      : { type: 'image', source: { type: 'url', url: imageData } };
 
-    const response = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:500,
-        messages:[{
-          role:'user',
-          content:[
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
             imageContent,
-            {type:'text',text:`Look carefully at this trading PnL card image. Read ALL text visible on the card precisely. Extract and respond ONLY with valid JSON (no markdown, no explanation):
+            { type: 'text', text: `Look carefully at this trading PnL card image. Read ALL text visible on the card precisely. Extract and respond ONLY with valid JSON (no markdown, no explanation):
 {
   "direction": "Long" or "Short" (read from the pill/badge near top),
   "leverage": 40 (the number before 'x' in the badge, as integer),
@@ -313,57 +941,51 @@ async function analyzeCard(imageData, isBase64){
   "markPrice": "2079.010" (exact value next to Mark Price label),
   "referralCode": "x.com/bulktrade" (text next to Referral code label)
 }
-Be precise with numbers - copy them exactly as shown. If a field is truly not visible return null.`}
+Be precise with numbers - copy them exactly as shown. If a field is truly not visible return null.` }
           ]
         }]
       })
     });
-    const data=await response.json();
-    console.log('API response:', JSON.stringify(data));
-    if(data.error){showImportStatus('API Error: '+data.error.message,'#ff4060');return;}
-    if(!data.content||!data.content.length){showImportStatus('Empty response from API','#ff4060');return;}
-    const text=(data.content.find(c=>c.type==='text')||data.content[0])?.text||'';
-    console.log('Extracted text:', text);
+    
+    const data = await response.json();
+    if (data.error) { showImportStatus('API Error: ' + data.error.message, '#ff4060'); return; }
+    if (!data.content || !data.content.length) { showImportStatus('Empty response from API', '#ff4060'); return; }
+    
+    const text = (data.content.find(c => c.type === 'text') || data.content[0])?.text || '';
     let parsed;
-    try{parsed=JSON.parse(text.replace(/```json\n?|```/g,'').trim());}
-    catch(e){
-      // AI couldn't find a PnL card
-      showImportStatus('⚠ This doesn\'t look like a Bulk PnL card. Please paste a valid card image.','#ff4060');
+    try { parsed = JSON.parse(text.replace(/```json\n?|```/g, '').trim()); }
+    catch (e) {
+      showImportStatus('⚠ This doesn\'t look like a Bulk PnL card. Please paste a valid card image.', '#ff4060');
       return;
     }
 
-    // Reset bg and preview
-    customBgDataUrl=null;
-    videoEl=null;
+    customBgDataUrl = null;
+    videoEl = null;
     cancelAnimationFrame(animFrameId);
-    const canvas=document.getElementById('previewCanvas');
-    canvas.style.display='none';
-    document.getElementById('emptyState').style.display='flex';
+    const canvas = document.getElementById('previewCanvas');
+    canvas.style.display = 'none';
+    document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('btnDownload').classList.remove('visible');
 
-    if(parsed.direction)setDir(parsed.direction);
-    if(parsed.leverage)document.getElementById('leverage').value=Math.min(parsed.leverage,50);
-    if(parsed.pair){const sel=document.getElementById('pair');for(let o of sel.options){if(o.value===parsed.pair){sel.value=parsed.pair;break;}}}
-    if(parsed.pnl)document.getElementById('pnlValue').value=parsed.pnl;
-    if(parsed.pnlType)document.getElementById('pnlType').value=parsed.pnlType;
-    if(parsed.entryPrice)document.getElementById('entryPrice').value=parsed.entryPrice;
-    if(parsed.markPrice)document.getElementById('markPrice').value=parsed.markPrice;
-    if(parsed.referralCode)document.getElementById('refCode').value=parsed.referralCode;
+    if (parsed.direction) setDir(parsed.direction);
+    if (parsed.leverage) document.getElementById('leverage').value = Math.min(parsed.leverage, 50);
+    if (parsed.pair) {
+      const sel = document.getElementById('pair');
+      for (let o of sel.options) {
+        if (o.value === parsed.pair) { sel.value = parsed.pair; break; }
+      }
+    }
+    if (parsed.pnl) document.getElementById('pnlValue').value = parsed.pnl;
+    if (parsed.pnlType) document.getElementById('pnlType').value = parsed.pnlType;
+    if (parsed.entryPrice) document.getElementById('entryPrice').value = parsed.entryPrice;
+    if (parsed.markPrice) document.getElementById('markPrice').value = parsed.markPrice;
+    if (parsed.referralCode) document.getElementById('refCode').value = parsed.referralCode;
 
-    showImportStatus('✓ Fields filled! Now choose a background and hit GENERATE','#00e8a2');
-  } catch(err){
-    showImportStatus('Error: '+err.message,'#ff4060');
+    showImportStatus('✓ Fields filled! Now choose a background and hit GENERATE', '#00e8a2');
+  } catch (err) {
+    showImportStatus('Error: ' + err.message, '#ff4060');
   }
 }
-
-function downloadCard(){
-  const canvas=document.getElementById('previewCanvas');
-  try {
-    const link=document.createElement('a');
-    link.download='bulk-pnl-card.png';
-    link.href=canvas.toDataURL('image/png');
-    link.click();
-  } catch(e) {
-    alert('Не вдалось завантажити: '+e.message+'. Спробуй клік правою кнопкою на картці → Зберегти зображення.');
-  }
-}</script></body></html>
+</script>
+</body>
+</html>
