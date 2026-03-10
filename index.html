@@ -472,22 +472,47 @@ function setupVideo(src, isLocal) {
   videoEl.loop = false;
   videoEl.muted = true;
   videoEl.playsInline = true;
+  videoEl.preload = 'auto';
   const status = document.getElementById('videoStatus');
   const btn = document.getElementById('btnRecord');
-  status.textContent = 'Loading...';
+  status.textContent = '⏳ Loading video...';
   status.style.color = '#888';
+  
   videoEl.onloadeddata = () => {
-    status.textContent = '✓ Video ready. Fill in the fields and hit GENERATE — then RECORD & SAVE';
+    status.textContent = '✓ Video ready! Fill in the fields and hit GENERATE — then RECORD & SAVE';
     status.style.color = '#00e8a2';
     btn.style.display = 'block';
     customBgDataUrl = '__video__';
     document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
     document.getElementById('urlThumb').classList.add('selected');
   };
-  videoEl.onerror = () => {
-    status.textContent = '✗ Error loading video';
+  
+  videoEl.onerror = (e) => {
+    const err = videoEl.error;
+    let msg = '✗ Помилка завантаження відео';
+    if (err) {
+      switch(err.code) {
+        case 1: msg += ': Завантаження перервано'; break;
+        case 2: msg += ': Мережева помилка (CORS або недоступний URL)'; break;
+        case 3: msg += ': Не вдалося декодувати відео'; break;
+        case 4: msg += ': Формат не підтримується'; break;
+      }
+    }
+    if (!isLocal) {
+      msg += '\n💡 Спробуйте завантажити файл з пристрою';
+    }
+    status.innerHTML = msg.replace('\n', '<br>');
     status.style.color = '#ff4060';
+    btn.style.display = 'none';
   };
+  
+  // Timeout for slow loading
+  setTimeout(() => {
+    if (videoEl && videoEl.readyState < 2) {
+      status.innerHTML = '⚠ Завантаження займає довго...<br>Якщо URL з іншого сайту - спробуйте завантажити файл з пристрою';
+      status.style.color = '#c8b882';
+    }
+  }, 5000);
 }
 
 function formatPnl(input) {
@@ -537,7 +562,11 @@ function generate() {
     if (!videoEl) { alert('Video not loaded!'); return; }
     document.getElementById('emptyState').style.display = 'none';
     canvas.style.display = 'block';
-    document.getElementById('btnDownload').classList.add('visible');
+    const dlBtn = document.getElementById('btnDownload');
+    dlBtn.classList.add('visible');
+    dlBtn.innerHTML = '⏺ RECORD & SAVE VIDEO';
+    dlBtn.style.borderColor = '#ff4060';
+    dlBtn.style.color = '#ff4060';
     videoEl.currentTime = 0;
     videoEl.onseeked = () => {
       drawVideoFrame();
@@ -547,6 +576,12 @@ function generate() {
     };
     return;
   }
+  
+  // Reset button for image mode
+  const dlBtn = document.getElementById('btnDownload');
+  dlBtn.innerHTML = '⬇ DOWNLOAD';
+  dlBtn.style.borderColor = '#00e8a2';
+  dlBtn.style.color = '#00e8a2';
   
   const drawContent = () => {
     const isProfit = !pnl.startsWith('-');
@@ -783,6 +818,12 @@ function startVideoRecord() {
 }
 
 function downloadCard() {
+  // If video mode is active, record video instead of saving PNG
+  if (customBgDataUrl === '__video__' && videoEl) {
+    startVideoRecord();
+    return;
+  }
+  
   const canvas = document.getElementById('previewCanvas');
   try {
     const link = document.createElement('a');
