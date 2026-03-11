@@ -328,13 +328,7 @@
       
       <div class="field">
         <label>Background</label>
-        <div class="bg-grid" id="bgGrid">
-          <div class="bg-thumb selected" data-idx="0" onclick="selectBg(0)" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">Dark Blue</div>
-          <div class="bg-thumb" data-idx="1" onclick="selectBg(1)" style="background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);">Black</div>
-          <div class="bg-thumb" data-idx="2" onclick="selectBg(2)" style="background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 100%);">Purple</div>
-          <div class="bg-thumb" data-idx="3" onclick="selectBg(3)" style="background: linear-gradient(135deg, #0a1a0a 0%, #1b3d1b 100%);">Green</div>
-          <div class="bg-thumb" id="urlThumb" style="background:#1e1e1e;">🔗 URL</div>
-        </div>
+        <div class="bg-grid" id="bgGrid"></div>
         
         <div class="mode-btns">
           <button onclick="setUrlMode('image')" id="modeImg" class="mode-btn active-img">🖼 IMAGE</button>
@@ -377,11 +371,8 @@
 <script>
 const CARD_W = 650, CARD_H = 800;
 const logoImg = new Image();
-logoImg.src = 'data:image/svg+xml,' + encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" width="181" height="70" viewBox="0 0 181 70">
-  <text x="10" y="50" font-family="Playfair Display, serif" font-size="48" font-weight="600" fill="#c8b882">BULK</text>
-</svg>
-`);
+logoImg.crossOrigin = 'anonymous';
+logoImg.src = 'https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/logo_BULK.png';
 
 let direction = 'Long';
 let selectedBg = 0;
@@ -391,18 +382,64 @@ let animFrameId = null;
 let mediaRecorder = null;
 let urlMode = 'image';
 
-// Gradient backgrounds (no images)
-const bgGradients = [
-  ['#1a1a2e', '#16213e'],  // Dark Blue
-  ['#0f0f0f', '#1a1a1a'],  // Black
-  ['#1a0a2e', '#2d1b4e'],  // Purple
-  ['#0a1a0a', '#1b3d1b']   // Green
+// GitHub assets base URL
+const ASSETS_BASE = 'https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/';
+
+// Background images for Long and Short
+const longBgImages = [
+  ASSETS_BASE + 'long_background1.png',
+  ASSETS_BASE + 'long_background2.png',
+  ASSETS_BASE + 'long_background3.png',
+  ASSETS_BASE + 'long_background4.png'
 ];
+
+const shortBgImages = [
+  ASSETS_BASE + 'short_background1.png',
+  ASSETS_BASE + 'short_background2.png'
+];
+
+// Preload images
+const loadedLongBgImgs = longBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
+const loadedShortBgImgs = shortBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
+
+function renderBgThumbs() {
+  const grid = document.getElementById('bgGrid');
+  const images = direction === 'Long' ? longBgImages : shortBgImages;
+  grid.innerHTML = '';
+  
+  images.forEach((src, idx) => {
+    const div = document.createElement('div');
+    div.className = 'bg-thumb' + (idx === selectedBg ? ' selected' : '');
+    div.dataset.idx = idx;
+    div.onclick = () => selectBg(idx);
+    div.style.backgroundImage = `url(${src})`;
+    div.style.backgroundSize = 'cover';
+    div.style.backgroundPosition = 'center';
+    grid.appendChild(div);
+  });
+  
+  // Add URL thumb
+  const urlDiv = document.createElement('div');
+  urlDiv.className = 'bg-thumb';
+  urlDiv.id = 'urlThumb';
+  urlDiv.style.background = '#1e1e1e';
+  urlDiv.innerHTML = '🔗 URL';
+  urlDiv.onclick = () => {
+    document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
+    urlDiv.classList.add('selected');
+  };
+  grid.appendChild(urlDiv);
+}
 
 function setDir(d) {
   direction = d;
   document.getElementById('btnLong').className = 'dir-btn' + (d === 'Long' ? ' active-long' : '');
   document.getElementById('btnShort').className = 'dir-btn' + (d === 'Short' ? ' active-short' : '');
+  
+  // Reset selection and re-render thumbnails
+  selectedBg = 0;
+  customBgDataUrl = null;
+  renderBgThumbs();
 }
 
 function selectBg(idx) {
@@ -687,7 +724,14 @@ function generate() {
     img.onload = () => drawBg(img);
     img.src = customBgDataUrl;
   } else {
-    drawGradientBg();
+    // Use preloaded background images
+    const bgArr = direction === 'Long' ? loadedLongBgImgs : loadedShortBgImgs;
+    const bgImg = bgArr[selectedBg] || bgArr[0];
+    if (bgImg.complete && bgImg.naturalWidth > 0) {
+      drawBg(bgImg);
+    } else {
+      bgImg.onload = () => drawBg(bgImg);
+    }
   }
 }
 
@@ -1027,6 +1071,11 @@ Be precise with numbers - copy them exactly as shown. If a field is truly not vi
     showImportStatus('Error: ' + err.message, '#ff4060');
   }
 }
+
+// Initialize on page load
+window.addEventListener('load', () => {
+  renderBgThumbs();
+});
 </script>
 </body>
 </html>
