@@ -130,10 +130,10 @@
       border-color: var(--green);
     }
     /* Short direction - red highlight */
-    .short-mode .bg-thumb:hover {
+    .bg-grid.short-mode .bg-thumb:hover {
       border-color: var(--red);
     }
-    .short-mode .bg-thumb.selected {
+    .bg-grid.short-mode .bg-thumb.selected {
       border-color: var(--red);
     }
     .preview-wrap {
@@ -442,18 +442,18 @@ function setDir(d) {
   document.getElementById('btnLong').className = 'dir-btn' + (d === 'Long' ? ' active-long' : '');
   document.getElementById('btnShort').className = 'dir-btn' + (d === 'Short' ? ' active-short' : '');
   
-  // Toggle short-mode class for red/green highlighting
+  // Reset selection and re-render thumbnails
+  selectedBg = 0;
+  customBgDataUrl = null;
+  renderBgThumbs();
+  
+  // Toggle short-mode class for red/green highlighting (after render)
   const bgGrid = document.getElementById('bgGrid');
   if (d === 'Short') {
     bgGrid.classList.add('short-mode');
   } else {
     bgGrid.classList.remove('short-mode');
   }
-  
-  // Reset selection and re-render thumbnails
-  selectedBg = 0;
-  customBgDataUrl = null;
-  renderBgThumbs();
 }
 
 function selectBg(idx) {
@@ -670,7 +670,7 @@ function generate() {
     
     // PnL
     const pnlSize = pnl.length > 13 ? 62 : pnl.length > 10 ? 72 : 82;
-    ctx.font = `300 ${pnlSize}px "Share Tech Mono", monospace`;
+    ctx.font = `500 ${pnlSize}px "IBM Plex Mono", "Share Tech Mono", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
     ctx.fillText(pnl, 48, 258);
     
