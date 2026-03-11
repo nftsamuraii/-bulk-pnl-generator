@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BULK PnL Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0a0a0a;
@@ -18,7 +18,7 @@
     body {
       background: var(--bg);
       color: #fff;
-      font-family: 'Inter', sans-serif;
+      font-family: 'IBM Plex Sans', sans-serif;
       min-height: 100vh;
       padding: 20px;
     }
@@ -62,7 +62,7 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       color: #fff;
-      font-family: 'Inter', sans-serif;
+      font-family: 'IBM Plex Sans', sans-serif;
       font-size: 14px;
       padding: 12px 14px;
       outline: none;
@@ -212,7 +212,7 @@
       flex: 1;
       padding: 7px;
       border-radius: 6px;
-      font-family: 'Inter', sans-serif;
+      font-family: 'IBM Plex Sans', sans-serif;
       font-size: 11px;
       letter-spacing: 1px;
       cursor: pointer;
@@ -255,15 +255,18 @@
   </style>
 </head>
 <body>
+  <!-- Header -->
+  <header style="max-width:1100px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;padding:20px 0;">
+    <h1 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:500;letter-spacing:4px;color:#c8b882;text-transform:uppercase;margin:0;">Bulk PnL Generator</h1>
+  </header>
+
   <div class="container">
     <div class="panel">
-      <h2>✦ Trade Data</h2>
-      
       <!-- Import Section -->
-      <div class="import-section">
+      <div class="import-section" style="margin-bottom:20px;">
         <div style="font-size:11px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:8px;">Import from Bulk Card</div>
         <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="importUrl" type="text" placeholder="Paste image URL..." style="flex:1;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;">
+          <input id="importUrl" type="text" placeholder="Paste image URL..." style="flex:1;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;">
           <label style="display:flex;align-items:center;justify-content:center;padding:10px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:12px;cursor:pointer;white-space:nowrap;">
             📁
             <input type="file" accept="image/*" style="display:none;" onchange="importFromFile(event)">
@@ -272,6 +275,8 @@
         <button onclick="importFromUrl()" style="width:100%;padding:10px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-family:'Playfair Display',serif;font-size:15px;letter-spacing:2px;cursor:pointer;">✦ IMPORT & AUTOFILL</button>
         <div id="importStatus" style="font-size:12px;color:#555;letter-spacing:1px;margin-top:6px;text-align:center;padding:6px;border-radius:6px;display:none;"></div>
       </div>
+
+      <h2>Fill Trade Data</h2>
 
       <div class="field">
         <label>Direction</label>
@@ -289,14 +294,9 @@
       <div class="field">
         <label>Trading Pair</label>
         <select id="pair">
-          <option value="SOL-USD">SOL-USD</option>
           <option value="BTC-USD">BTC-USD</option>
           <option value="ETH-USD">ETH-USD</option>
-          <option value="DOGE-USD">DOGE-USD</option>
-          <option value="XRP-USD">XRP-USD</option>
-          <option value="LINK-USD">LINK-USD</option>
-          <option value="AVAX-USD">AVAX-USD</option>
-          <option value="ADA-USD">ADA-USD</option>
+          <option value="SOL-USD">SOL-USD</option>
         </select>
       </div>
       
@@ -336,13 +336,13 @@
         </div>
         
         <div id="imageMode">
-          <input id="urlInput" type="text" placeholder="Paste image URL..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:6px;" oninput="loadUrlBg(this.value)">
+          <input id="urlInput" type="text" placeholder="Paste image URL..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:6px;" oninput="loadUrlBg(this.value)">
           <div id="pasteHint" style="font-size:11px;color:#555;letter-spacing:1px;text-align:center;">CTRL+V — PASTE IMAGE FROM CLIPBOARD</div>
           <div class="hint">💡 <b>HOW TO USE:</b><br>1. Right-click any image → Copy image<br>2. Press <b class="light">Ctrl+V</b> anywhere on this page<br>3. Or paste a direct image URL above</div>
         </div>
         
         <div id="videoMode" style="display:none;">
-          <input id="videoUrlInput" type="text" placeholder="Paste video URL (mp4, webm)..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:8px;" onchange="loadVideoBg(this.value)">
+          <input id="videoUrlInput" type="text" placeholder="Paste video URL (mp4, webm)..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:8px;" onchange="loadVideoBg(this.value)">
           <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">— OR —</div>
           <label class="upload-label">
             📁 UPLOAD FROM DEVICE
