@@ -129,6 +129,13 @@
     .bg-thumb.selected {
       border-color: var(--green);
     }
+    /* Short direction - red highlight */
+    .short-mode .bg-thumb:hover {
+      border-color: var(--red);
+    }
+    .short-mode .bg-thumb.selected {
+      border-color: var(--red);
+    }
     .preview-wrap {
       display: flex;
       flex-direction: column;
@@ -434,6 +441,14 @@ function setDir(d) {
   direction = d;
   document.getElementById('btnLong').className = 'dir-btn' + (d === 'Long' ? ' active-long' : '');
   document.getElementById('btnShort').className = 'dir-btn' + (d === 'Short' ? ' active-short' : '');
+  
+  // Toggle short-mode class for red/green highlighting
+  const bgGrid = document.getElementById('bgGrid');
+  if (d === 'Short') {
+    bgGrid.classList.add('short-mode');
+  } else {
+    bgGrid.classList.remove('short-mode');
+  }
   
   // Reset selection and re-render thumbnails
   selectedBg = 0;
