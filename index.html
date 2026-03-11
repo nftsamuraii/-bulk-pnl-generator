@@ -408,6 +408,10 @@ const shortBgImages = [
 const loadedLongBgImgs = longBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
 const loadedShortBgImgs = shortBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
 
+// Preload fonts for canvas
+document.fonts.load('500 82px "IBM Plex Mono"').then(() => console.log('IBM Plex Mono loaded'));
+document.fonts.load('400 24px "Roboto Condensed"').then(() => console.log('Roboto Condensed loaded'));
+
 function renderBgThumbs() {
   const grid = document.getElementById('bgGrid');
   const images = direction === 'Long' ? longBgImages : shortBgImages;
@@ -575,8 +579,11 @@ function formatPnl(input) {
   return (isNeg ? '-' : '+') + '$' + formatted;
 }
 
-function generate() {
+async function generate() {
   cancelAnimationFrame(animFrameId);
+  
+  // Wait for font to load
+  await document.fonts.load('500 82px "IBM Plex Mono"');
   
   const leverage = document.getElementById('leverage').value || '1';
   const pair = document.getElementById('pair').value || 'SOL-USD';
