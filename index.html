@@ -384,18 +384,19 @@ let urlMode = 'image';
 
 // GitHub assets base URL
 const ASSETS_BASE = 'https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/';
+const CACHE_BUST = '?v=' + Date.now();
 
 // Background images for Long and Short
 const longBgImages = [
-  ASSETS_BASE + 'long_background1.png',
-  ASSETS_BASE + 'long_background2.png',
-  ASSETS_BASE + 'long_background3.png',
-  ASSETS_BASE + 'long_background4.png'
+  ASSETS_BASE + 'long_background1.png' + CACHE_BUST,
+  ASSETS_BASE + 'long_background2.png' + CACHE_BUST,
+  ASSETS_BASE + 'long_background3.png' + CACHE_BUST,
+  ASSETS_BASE + 'long_background4.png' + CACHE_BUST
 ];
 
 const shortBgImages = [
-  ASSETS_BASE + 'short_background1.png',
-  ASSETS_BASE + 'short_background2.png'
+  ASSETS_BASE + 'short_background1.png' + CACHE_BUST,
+  ASSETS_BASE + 'short_background2.png' + CACHE_BUST
 ];
 
 // Preload images
