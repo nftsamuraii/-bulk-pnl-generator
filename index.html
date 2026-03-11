@@ -344,8 +344,13 @@
         
         <div id="imageMode">
           <input id="urlInput" type="text" placeholder="Paste image URL..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:6px;" oninput="loadUrlBg(this.value)">
-          <div id="pasteHint" style="font-size:11px;color:#555;letter-spacing:1px;text-align:center;">CTRL+V — PASTE IMAGE FROM CLIPBOARD</div>
-          <div class="hint">💡 <b>HOW TO USE:</b><br>1. Right-click any image → Copy image<br>2. Press <b class="light">Ctrl+V</b> anywhere on this page<br>3. Or paste a direct image URL above</div>
+          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">— OR —</div>
+          <label class="upload-label">
+            📁 UPLOAD FROM DEVICE
+            <input type="file" accept="image/*" style="display:none;" onchange="loadImageFile(event)">
+          </label>
+          <div id="pasteHint" style="font-size:11px;color:#555;letter-spacing:1px;text-align:center;margin-top:8px;">CTRL+V — PASTE IMAGE FROM CLIPBOARD</div>
+          <div class="hint">💡 <b>HOW TO USE:</b><br>1. Upload an image from your device<br>2. Or paste a direct image URL above<br>3. Or press <b class="light">Ctrl+V</b> to paste from clipboard</div>
         </div>
         
         <div id="videoMode" style="display:none;">
@@ -502,6 +507,20 @@ function loadUrlBg(url) {
   img.src = url;
 }
 
+function loadImageFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    customBgDataUrl = ev.target.result;
+    document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
+    document.getElementById('urlThumb').classList.add('selected');
+    document.getElementById('pasteHint').textContent = '✓ IMAGE LOADED!';
+    document.getElementById('pasteHint').style.color = '#00e8a2';
+  };
+  reader.readAsDataURL(file);
+}
+
 function loadVideoBg(url) {
   if (!url) return;
   setupVideo(url);
@@ -625,13 +644,23 @@ async function generate() {
     dlBtn.innerHTML = '⏺ RECORD & SAVE VIDEO';
     dlBtn.style.borderColor = '#ff4060';
     dlBtn.style.color = '#ff4060';
+    
     videoEl.currentTime = 0;
-    videoEl.onseeked = () => {
+    videoEl.muted = true;
+    
+    const startVideoPreview = () => {
       drawVideoFrame();
       cancelAnimationFrame(animFrameId);
       animFrameId = requestAnimationFrame(function loop() { drawVideoFrame(); animFrameId = requestAnimationFrame(loop); });
-      videoEl.play();
+      videoEl.play().catch(e => console.log('Video play error:', e));
     };
+    
+    if (videoEl.readyState >= 2) {
+      startVideoPreview();
+    } else {
+      videoEl.onloadeddata = startVideoPreview;
+      videoEl.onseeked = startVideoPreview;
+    }
     return;
   }
   
@@ -679,7 +708,7 @@ async function generate() {
     const pnlSize = pnl.length > 13 ? 62 : pnl.length > 10 ? 72 : 82;
     ctx.font = `300 ${pnlSize}px "Share Tech Mono", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
-    ctx.fillText(pnl, 48, 258);
+    ctx.fillText(pnl, 48, 295);
     
     // Details
     const details = [
