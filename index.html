@@ -409,7 +409,7 @@ const loadedLongBgImgs = longBgImages.map(src => { const img = new Image(); img.
 const loadedShortBgImgs = shortBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
 
 // Preload fonts for canvas
-document.fonts.load('500 82px "IBM Plex Mono"').then(() => console.log('IBM Plex Mono loaded'));
+document.fonts.load('300 82px "Share Tech Mono"').then(() => console.log('Share Tech Mono loaded'));
 document.fonts.load('400 24px "Roboto Condensed"').then(() => console.log('Roboto Condensed loaded'));
 
 function renderBgThumbs() {
@@ -583,7 +583,7 @@ async function generate() {
   cancelAnimationFrame(animFrameId);
   
   // Wait for font to load
-  await document.fonts.load('500 82px "IBM Plex Mono"');
+  await document.fonts.load('300 82px "Share Tech Mono"');
   
   const leverage = document.getElementById('leverage').value || '1';
   const pair = document.getElementById('pair').value || 'SOL-USD';
@@ -677,7 +677,7 @@ async function generate() {
     
     // PnL
     const pnlSize = pnl.length > 13 ? 62 : pnl.length > 10 ? 72 : 82;
-    ctx.font = `500 ${pnlSize}px "IBM Plex Mono", "Share Tech Mono", monospace`;
+    ctx.font = `300 ${pnlSize}px "Share Tech Mono", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
     ctx.fillText(pnl, 48, 258);
     
