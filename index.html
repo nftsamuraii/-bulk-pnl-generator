@@ -881,7 +881,7 @@ function startVideoRecord() {
   const dlBtn = document.getElementById('btnDownload');
   
   dlBtn.disabled = true;
-  dlBtn.innerHTML = '⏺ RECORDING...';
+  dlBtn.innerHTML = '⏺ PREPARING...';
   dlBtn.style.background = '#aa0000';
   dlBtn.style.color = '#fff';
   dlBtn.style.borderColor = '#aa0000';
@@ -917,24 +917,37 @@ function startVideoRecord() {
   
   const duration = Math.min(videoEl.duration || 20, 20) * 1000;
   
-  // Start animation loop for recording
-  cancelAnimationFrame(animFrameId);
-  animFrameId = requestAnimationFrame(function loop() { 
-    drawVideoFrame(); 
-    animFrameId = requestAnimationFrame(loop); 
-  });
+  // Wait for video to be ready, draw first frame, then start recording
+  videoEl.onseeked = () => {
+    // Draw first frame before recording starts
+    drawVideoFrame();
+    
+    // Start animation loop
+    cancelAnimationFrame(animFrameId);
+    animFrameId = requestAnimationFrame(function loop() { 
+      drawVideoFrame(); 
+      animFrameId = requestAnimationFrame(loop); 
+    });
+    
+    // Small delay to ensure first frame is drawn, then start recording
+    setTimeout(() => {
+      mediaRecorder.start();
+      dlBtn.innerHTML = '⏺ RECORDING...';
+      
+      videoEl.play().then(() => {
+        if (status) {
+          status.textContent = 'Recording...';
+          status.style.color = '#ff4060';
+        }
+      }).catch(e => console.log('Video play error:', e));
+    }, 100);
+  };
   
-  // Start recording and play video
-  mediaRecorder.start();
-  videoEl.play().then(() => {
-    if (status) {
-      status.textContent = 'Recording...';
-      status.style.color = '#ff4060';
-    }
-  }).catch(e => console.log('Video play error:', e));
+  // Trigger seek to frame 0
+  videoEl.currentTime = 0.001;
   
   videoEl.onended = () => { 
-    if (mediaRecorder.state === 'recording') { 
+    if (mediaRecorder && mediaRecorder.state === 'recording') { 
       mediaRecorder.stop(); 
       videoEl.pause(); 
     } 
@@ -944,7 +957,7 @@ function startVideoRecord() {
       mediaRecorder.stop(); 
       videoEl.pause(); 
     } 
-  }, duration + 500);
+  }, duration + 600);
 }
 
 function downloadCard() {
