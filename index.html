@@ -548,14 +548,17 @@ function setupVideo(src, isLocal) {
   videoEl.playsInline = true;
   videoEl.preload = 'auto';
   const status = document.getElementById('videoStatus');
-  const btn = document.getElementById('btnRecord');
-  status.textContent = '⏳ Loading video...';
-  status.style.color = '#888';
+  
+  if (status) {
+    status.textContent = '⏳ Loading video...';
+    status.style.color = '#888';
+  }
   
   videoEl.onloadeddata = () => {
-    status.textContent = '✓ Video ready! Fill in the fields and hit GENERATE — then RECORD & SAVE';
-    status.style.color = '#00e8a2';
-    btn.style.display = 'block';
+    if (status) {
+      status.textContent = '✓ Video ready! Fill in the fields and hit GENERATE';
+      status.style.color = '#00e8a2';
+    }
     customBgDataUrl = '__video__';
     document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
     document.getElementById('urlThumb').classList.add('selected');
@@ -575,9 +578,10 @@ function setupVideo(src, isLocal) {
     if (!isLocal) {
       msg += '\n💡 Спробуйте завантажити файл з пристрою';
     }
-    status.innerHTML = msg.replace('\n', '<br>');
-    status.style.color = '#ff4060';
-    btn.style.display = 'none';
+    if (status) {
+      status.innerHTML = msg.replace('\n', '<br>');
+      status.style.color = '#ff4060';
+    }
   };
   
   // Timeout for slow loading
@@ -874,12 +878,16 @@ function startVideoRecord() {
   canvas.width = 650;
   canvas.height = 800;
   const status = document.getElementById('recordStatus');
-  const btn = document.getElementById('btnRecord');
-  btn.disabled = true;
-  btn.textContent = '⏺ RECORDING...';
-  btn.style.background = '#aa0000';
+  const dlBtn = document.getElementById('btnDownload');
+  
+  dlBtn.disabled = true;
+  dlBtn.innerHTML = '⏺ RECORDING...';
+  dlBtn.style.background = '#aa0000';
+  dlBtn.style.color = '#fff';
+  dlBtn.style.borderColor = '#aa0000';
+  
   videoEl.currentTime = 0;
-  videoEl.play();
+  videoEl.muted = true;
   
   const stream = canvas.captureStream(30);
   let mimeType = 'video/webm;codecs=vp9';
@@ -895,20 +903,48 @@ function startVideoRecord() {
     a.href = url;
     a.download = 'bulk-pnl-video.webm';
     a.click();
-    btn.disabled = false;
-    btn.textContent = '⏺ RECORD & SAVE';
-    btn.style.background = '#ff4060';
-    status.textContent = '✓ Video saved!';
-    status.style.color = '#00e8a2';
+    
+    dlBtn.disabled = false;
+    dlBtn.innerHTML = '⏺ RECORD & SAVE VIDEO';
+    dlBtn.style.background = 'transparent';
+    dlBtn.style.color = '#ff4060';
+    dlBtn.style.borderColor = '#ff4060';
+    if (status) {
+      status.textContent = '✓ Video saved!';
+      status.style.color = '#00e8a2';
+    }
   };
   
   const duration = Math.min(videoEl.duration || 20, 20) * 1000;
+  
+  // Start animation loop for recording
+  cancelAnimationFrame(animFrameId);
+  animFrameId = requestAnimationFrame(function loop() { 
+    drawVideoFrame(); 
+    animFrameId = requestAnimationFrame(loop); 
+  });
+  
+  // Start recording and play video
   mediaRecorder.start();
-  status.textContent = 'Recording...';
-  status.style.color = '#ff4060';
-  animFrameId = requestAnimationFrame(function loop() { drawVideoFrame(); animFrameId = requestAnimationFrame(loop); });
-  videoEl.onended = () => { if (mediaRecorder.state === 'recording') { mediaRecorder.stop(); videoEl.pause(); } };
-  setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); videoEl.pause(); } }, duration + 500);
+  videoEl.play().then(() => {
+    if (status) {
+      status.textContent = 'Recording...';
+      status.style.color = '#ff4060';
+    }
+  }).catch(e => console.log('Video play error:', e));
+  
+  videoEl.onended = () => { 
+    if (mediaRecorder.state === 'recording') { 
+      mediaRecorder.stop(); 
+      videoEl.pause(); 
+    } 
+  };
+  setTimeout(() => { 
+    if (mediaRecorder && mediaRecorder.state === 'recording') { 
+      mediaRecorder.stop(); 
+      videoEl.pause(); 
+    } 
+  }, duration + 500);
 }
 
 function downloadCard() {
