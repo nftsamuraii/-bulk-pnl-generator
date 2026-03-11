@@ -887,9 +887,30 @@ function startVideoRecord() {
   dlBtn.style.borderColor = '#aa0000';
   
   videoEl.currentTime = 0;
-  videoEl.muted = true;
+  videoEl.muted = false; // Enable audio
   
-  const stream = canvas.captureStream(30);
+  // Capture canvas video stream
+  const canvasStream = canvas.captureStream(30);
+  
+  // Try to capture audio from original video
+  let combinedStream;
+  try {
+    const audioCtx = new AudioContext();
+    const source = audioCtx.createMediaElementSource(videoEl);
+    const destination = audioCtx.createMediaStreamDestination();
+    source.connect(destination);
+    source.connect(audioCtx.destination); // Also play through speakers
+    
+    // Combine canvas video + audio
+    combinedStream = new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...destination.stream.getAudioTracks()
+    ]);
+  } catch (e) {
+    console.log('Could not capture audio:', e);
+    combinedStream = canvasStream;
+    videoEl.muted = true;
+  }
   
   // Try mp4 first (better Telegram support), fallback to webm
   let mimeType = 'video/mp4';
@@ -902,7 +923,7 @@ function startVideoRecord() {
     }
   }
   
-  mediaRecorder = new MediaRecorder(stream, { mimeType });
+  mediaRecorder = new MediaRecorder(combinedStream, { mimeType });
   const chunks = [];
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
   mediaRecorder.onstop = () => {
