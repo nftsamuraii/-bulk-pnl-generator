@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BULK PnL Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&family=VT323&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&family=VT323&family=Pixelify+Sans:wght@400;500;600;700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     @font-face {
       font-family: 'Terminal Grotesque';
@@ -700,15 +700,15 @@ async function generate() {
     ctx.textAlign = 'left';
     ctx.shadowBlur = 0;
     
-    // Logo
-    ctx.drawImage(logoImg, 40, 18, 181, 70);
+    // Logo - опущено нижче
+    ctx.drawImage(logoImg, 40, 38, 181, 70);
     
-    // Direction pill
-    const pillX = 48, pillY = 118, pillH = 42, pillR = 8;
-    ctx.font = '400 24px "Roboto Condensed", sans-serif';
+    // Direction pill - опущено нижче
+    const pillX = 48, pillY = 138, pillH = 52, pillR = 10;
+    ctx.font = '500 32px "IBM Plex Sans", sans-serif';
     const dirTxtW = ctx.measureText(direction).width;
     const levTxtW = ctx.measureText(` ${leverage}x`).width;
-    const pillW = dirTxtW + levTxtW + 28;
+    const pillW = dirTxtW + levTxtW + 32;
     
     ctx.beginPath();
     ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
@@ -717,35 +717,38 @@ async function generate() {
     ctx.stroke();
     
     ctx.fillStyle = dirColor;
-    ctx.fillText(direction, pillX + 12, pillY + 27);
+    ctx.fillText(direction, pillX + 14, pillY + 34);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(` ${leverage}x`, pillX + 12 + dirTxtW, pillY + 27);
+    ctx.fillText(` ${leverage}x`, pillX + 14 + dirTxtW, pillY + 34);
     
-    // Pair
+    // Pair - вирівняно по центру з pill
     ctx.fillStyle = '#ffffff';
-    ctx.font = '400 28px "Roboto Condensed", sans-serif';
-    ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
+    ctx.font = '500 40px "IBM Plex Sans", sans-serif';
+    ctx.fillText(pair, pillX + pillW + 20, pillY + 36);
     
-    // PnL
-    const pnlSize = pnl.length > 13 ? 52 : pnl.length > 10 ? 62 : 72;
+    // PnL - збільшений шрифт
+    const pnlSize = pnl.length > 13 ? 82 : pnl.length > 10 ? 96 : 110;
     ctx.font = `${pnlSize}px "Terminal Grotesque", "Share Tech Mono", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
-    ctx.fillText(pnl, 48, 295);
+    ctx.fillText(pnl, 48, 330);
     
-    // Details
+    // Details - опущено нижче
     const details = [
       ['Entry Price', entryP],
       ['Mark Price', markP],
       ['Referral code', refCode]
     ];
-    const detailStartY = 370;
+    const detailStartY = 400;
     details.forEach(([label, val], i) => {
-      const y = detailStartY + i * 46;
-      ctx.font = '400 26px "Roboto", sans-serif';
+      const y = detailStartY + i * 36;
+      // Label - 24px, IBM Plex Sans, grey
+      ctx.font = '400 24px "IBM Plex Sans", sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
       ctx.fillText(label, 48, y);
+      // Value - 32px, Archivo (DIN-like), white
+      ctx.font = '500 32px "Archivo", sans-serif';
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(val, 248, y);
+      ctx.fillText(val, 200, y);
     });
     
     document.getElementById('emptyState').style.display = 'none';
@@ -851,13 +854,13 @@ function drawOverlayText(ctx, W, H) {
   const isProfit = !pnl.startsWith('-');
   const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
   
-  ctx.drawImage(logoImg, 40, 18, 181, 70);
+  ctx.drawImage(logoImg, 40, 38, 181, 70);
   
-  const pillX = 48, pillY = 118, pillH = 42, pillR = 8;
-  ctx.font = '400 24px "Roboto Condensed", sans-serif';
+  const pillX = 48, pillY = 138, pillH = 52, pillR = 10;
+  ctx.font = '500 32px "IBM Plex Sans", sans-serif';
   const dirTxtW = ctx.measureText(direction).width;
   const levTxtW = ctx.measureText(' ' + leverage + 'x').width;
-  const pillW = dirTxtW + levTxtW + 28;
+  const pillW = dirTxtW + levTxtW + 32;
   
   ctx.beginPath();
   ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
@@ -866,27 +869,30 @@ function drawOverlayText(ctx, W, H) {
   ctx.stroke();
   
   ctx.fillStyle = dirColor;
-  ctx.fillText(direction, pillX + 12, pillY + 27);
+  ctx.fillText(direction, pillX + 14, pillY + 34);
   ctx.fillStyle = '#fff';
-  ctx.fillText(' ' + leverage + 'x', pillX + 12 + dirTxtW, pillY + 27);
+  ctx.fillText(' ' + leverage + 'x', pillX + 14 + dirTxtW, pillY + 34);
   ctx.fillStyle = '#fff';
-  ctx.font = '400 28px "Roboto Condensed", sans-serif';
-  ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
+  ctx.font = '500 40px "IBM Plex Sans", sans-serif';
+  ctx.fillText(pair, pillX + pillW + 20, pillY + 36);
   
-  const pnlSize = pnl.length > 13 ? 52 : pnl.length > 10 ? 62 : 72;
+  const pnlSize = pnl.length > 13 ? 82 : pnl.length > 10 ? 96 : 110;
   ctx.font = pnlSize + 'px "Terminal Grotesque", "Share Tech Mono", monospace';
   ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
-  ctx.fillText(pnl, 48, 295);
+  ctx.fillText(pnl, 48, 330);
   
   const details = [['Entry Price', entryP], ['Mark Price', markP], ['Referral code', refCode]];
-  const detailStartY = 370;
+  const detailStartY = 400;
   details.forEach(([label, val], i) => {
-    const y = detailStartY + i * 46;
-    ctx.font = '400 26px "Roboto", sans-serif';
+    const y = detailStartY + i * 36;
+    // Label - 24px, IBM Plex Sans, grey
+    ctx.font = '400 24px "IBM Plex Sans", sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.fillText(label, 48, y);
-    ctx.fillStyle = '#fff';
-    ctx.fillText(val, 248, y);
+    // Value - 32px, Archivo (DIN-like), white
+    ctx.font = '500 32px "Archivo", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(val, 200, y);
   });
 }
 
