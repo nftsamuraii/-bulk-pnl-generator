@@ -389,7 +389,7 @@
   </div>
 
 <script>
-const CARD_W = 650, CARD_H = 800;
+const CARD_W = 760, CARD_H = 824;
 const logoImg = new Image();
 logoImg.crossOrigin = 'anonymous';
 logoImg.src = 'https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/logo_BULK.png';
@@ -893,8 +893,8 @@ function drawOverlayText(ctx, W, H) {
 function startVideoRecord() {
   if (!videoEl) { alert('Please upload a video first!'); return; }
   const canvas = document.getElementById('previewCanvas');
-  canvas.width = 650;
-  canvas.height = 800;
+  canvas.width = CARD_W;
+  canvas.height = CARD_H;
   const status = document.getElementById('recordStatus');
   const dlBtn = document.getElementById('btnDownload');
   
