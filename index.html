@@ -575,11 +575,13 @@ function setupVideo(src, isLocal) {
         case 4: msg += ': Формат не підтримується'; break;
       }
     }
-    if (!isLocal) {
-      msg += '\n💡 Спробуйте завантажити файл з пристрою';
+    if (err && err.code === 4) {
+      msg += '<br>💡 MOV/HEVC файли з iPhone можуть не працювати.<br>Спробуй конвертувати в MP4 (H.264) на <a href="https://cloudconvert.com/mov-to-mp4" target="_blank" style="color:#00e8a2;">cloudconvert.com</a>';
+    } else if (!isLocal) {
+      msg += '<br>💡 Спробуйте завантажити файл з пристрою';
     }
     if (status) {
-      status.innerHTML = msg.replace('\n', '<br>');
+      status.innerHTML = msg;
       status.style.color = '#ff4060';
     }
   };
