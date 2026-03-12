@@ -6,6 +6,15 @@
   <title>BULK PnL Generator</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&family=VT323&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: 'Terminal Grotesque';
+      src: url('https://cdn.jsdelivr.net/gh/nicobermudez/terminal-grotesque@master/terminalGrotesque-webfont.woff2') format('woff2'),
+           url('https://cdn.jsdelivr.net/gh/nicobermudez/terminal-grotesque@master/terminalGrotesque-webfont.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+  </style>
+  <style>
     :root {
       --bg: #0a0a0a;
       --card: #121212;
@@ -414,7 +423,7 @@ const loadedLongBgImgs = longBgImages.map(src => { const img = new Image(); img.
 const loadedShortBgImgs = shortBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
 
 // Preload fonts for canvas
-document.fonts.load('600 76px "Pixelify Sans"').then(() => console.log('Pixelify Sans loaded'));
+document.fonts.load('72px "Terminal Grotesque"').then(() => console.log('Terminal Grotesque loaded'));
 document.fonts.load('400 24px "Roboto Condensed"').then(() => console.log('Roboto Condensed loaded'));
 
 function renderBgThumbs() {
@@ -608,7 +617,7 @@ async function generate() {
   cancelAnimationFrame(animFrameId);
   
   // Wait for font to load
-  await document.fonts.load('600 76px "Pixelify Sans"');
+  await document.fonts.load('72px "Terminal Grotesque"');
   
   const leverage = document.getElementById('leverage').value || '1';
   const pair = document.getElementById('pair').value || 'SOL-USD';
@@ -711,8 +720,8 @@ async function generate() {
     ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
     
     // PnL
-    const pnlSize = pnl.length > 13 ? 58 : pnl.length > 10 ? 68 : 76;
-    ctx.font = `600 ${pnlSize}px "Pixelify Sans", sans-serif`;
+    const pnlSize = pnl.length > 13 ? 52 : pnl.length > 10 ? 62 : 72;
+    ctx.font = `${pnlSize}px "Terminal Grotesque", sans-serif`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
     ctx.fillText(pnl, 48, 295);
     
@@ -857,8 +866,8 @@ function drawOverlayText(ctx, W, H) {
   ctx.font = '400 28px "Roboto Condensed", sans-serif';
   ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
   
-  const pnlSize = pnl.length > 13 ? 58 : pnl.length > 10 ? 68 : 76;
-  ctx.font = '600 ' + pnlSize + 'px "Pixelify Sans", sans-serif';
+  const pnlSize = pnl.length > 13 ? 52 : pnl.length > 10 ? 62 : 72;
+  ctx.font = pnlSize + 'px "Terminal Grotesque", sans-serif';
   ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
   ctx.fillText(pnl, 48, 295);
   
