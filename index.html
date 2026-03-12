@@ -566,19 +566,19 @@ function setupVideo(src, isLocal) {
   
   videoEl.onerror = (e) => {
     const err = videoEl.error;
-    let msg = '✗ Помилка завантаження відео';
+    let msg = '✗ Video loading error';
     if (err) {
       switch(err.code) {
-        case 1: msg += ': Завантаження перервано'; break;
-        case 2: msg += ': Мережева помилка (CORS або недоступний URL)'; break;
-        case 3: msg += ': Не вдалося декодувати відео'; break;
-        case 4: msg += ': Формат не підтримується'; break;
+        case 1: msg += ': Loading aborted'; break;
+        case 2: msg += ': Network error (CORS or unavailable URL)'; break;
+        case 3: msg += ': Could not decode video'; break;
+        case 4: msg += ': Format not supported'; break;
       }
     }
     if (err && err.code === 4) {
-      msg += '<br>💡 MOV/HEVC файли з iPhone можуть не працювати.<br>Спробуй конвертувати в MP4 (H.264) на <a href="https://cloudconvert.com/mov-to-mp4" target="_blank" style="color:#00e8a2;">cloudconvert.com</a>';
+      msg += '<br>💡 MOV/HEVC files from iPhone may not work.<br>Try converting to MP4 (H.264) at <a href="https://cloudconvert.com/mov-to-mp4" target="_blank" style="color:#00e8a2;">cloudconvert.com</a>';
     } else if (!isLocal) {
-      msg += '<br>💡 Спробуйте завантажити файл з пристрою';
+      msg += '<br>💡 Try uploading the file from your device';
     }
     if (status) {
       status.innerHTML = msg;
@@ -589,7 +589,7 @@ function setupVideo(src, isLocal) {
   // Timeout for slow loading
   setTimeout(() => {
     if (videoEl && videoEl.readyState < 2) {
-      status.innerHTML = '⚠ Завантаження займає довго...<br>Якщо URL з іншого сайту - спробуйте завантажити файл з пристрою';
+      status.innerHTML = '⚠ Loading takes a while...<br>If URL is from another site - try uploading the file from your device';
       status.style.color = '#c8b882';
     }
   }, 5000);
