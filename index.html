@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BULK PnL Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:wght@400;500;600&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0a0a0a;
@@ -228,14 +228,14 @@
       color: #666;
     }
     .mode-btn.active-img {
-      border-color: var(--green);
-      background: rgba(0, 232, 162, 0.12);
-      color: var(--green);
+      border-color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
     }
     .mode-btn.active-vid {
-      border-color: var(--red);
-      background: rgba(255, 64, 96, 0.12);
-      color: var(--red);
+      border-color: #ffffff;
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
     }
     .upload-label {
       display: block;
@@ -414,7 +414,7 @@ const loadedLongBgImgs = longBgImages.map(src => { const img = new Image(); img.
 const loadedShortBgImgs = shortBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
 
 // Preload fonts for canvas
-document.fonts.load('300 82px "Share Tech Mono"').then(() => console.log('Share Tech Mono loaded'));
+document.fonts.load('400 88px "VT323"').then(() => console.log('VT323 loaded'));
 document.fonts.load('400 24px "Roboto Condensed"').then(() => console.log('Roboto Condensed loaded'));
 
 function renderBgThumbs() {
@@ -608,7 +608,7 @@ async function generate() {
   cancelAnimationFrame(animFrameId);
   
   // Wait for font to load
-  await document.fonts.load('300 82px "Share Tech Mono"');
+  await document.fonts.load('400 88px "VT323"');
   
   const leverage = document.getElementById('leverage').value || '1';
   const pair = document.getElementById('pair').value || 'SOL-USD';
@@ -711,8 +711,8 @@ async function generate() {
     ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
     
     // PnL
-    const pnlSize = pnl.length > 13 ? 62 : pnl.length > 10 ? 72 : 82;
-    ctx.font = `300 ${pnlSize}px "Share Tech Mono", monospace`;
+    const pnlSize = pnl.length > 13 ? 68 : pnl.length > 10 ? 78 : 88;
+    ctx.font = `400 ${pnlSize}px "VT323", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
     ctx.fillText(pnl, 48, 295);
     
@@ -857,10 +857,10 @@ function drawOverlayText(ctx, W, H) {
   ctx.font = '400 28px "Roboto Condensed", sans-serif';
   ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
   
-  const pnlSize = pnl.length > 13 ? 62 : pnl.length > 10 ? 72 : 82;
-  ctx.font = '300 ' + pnlSize + 'px "Share Tech Mono", monospace';
+  const pnlSize = pnl.length > 13 ? 68 : pnl.length > 10 ? 78 : 88;
+  ctx.font = '400 ' + pnlSize + 'px "VT323", monospace';
   ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
-  ctx.fillText(pnl, 48, 258);
+  ctx.fillText(pnl, 48, 295);
   
   const details = [['Entry Price', entryP], ['Mark Price', markP], ['Referral code', refCode]];
   const detailStartY = 370;
