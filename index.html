@@ -8,10 +8,11 @@
   <style>
     @font-face {
       font-family: 'Terminal Grotesque';
-      src: url('https://cdn.jsdelivr.net/gh/nicobermudez/terminal-grotesque@master/terminalGrotesque-webfont.woff2') format('woff2'),
-           url('https://cdn.jsdelivr.net/gh/nicobermudez/terminal-grotesque@master/terminalGrotesque-webfont.woff') format('woff');
+      src: url('https://rawcdn.githack.com/nicobermudez/terminal-grotesque/89a50d09d1a4ce2727a5d8e7e6df8108754cee55/terminalGrotesque-webfont.woff2') format('woff2'),
+           url('https://rawcdn.githack.com/nicobermudez/terminal-grotesque/89a50d09d1a4ce2727a5d8e7e6df8108754cee55/terminalGrotesque-webfont.woff') format('woff');
       font-weight: normal;
       font-style: normal;
+      font-display: swap;
     }
   </style>
   <style>
@@ -616,8 +617,15 @@ function formatPnl(input) {
 async function generate() {
   cancelAnimationFrame(animFrameId);
   
-  // Wait for font to load
-  await document.fonts.load('72px "Terminal Grotesque"');
+  // Wait for font to load with timeout
+  try {
+    await Promise.race([
+      document.fonts.load('72px "Terminal Grotesque"'),
+      new Promise((_, reject) => setTimeout(() => reject('timeout'), 3000))
+    ]);
+  } catch (e) {
+    console.log('Font load timeout, using fallback');
+  }
   
   const leverage = document.getElementById('leverage').value || '1';
   const pair = document.getElementById('pair').value || 'SOL-USD';
@@ -721,7 +729,7 @@ async function generate() {
     
     // PnL
     const pnlSize = pnl.length > 13 ? 52 : pnl.length > 10 ? 62 : 72;
-    ctx.font = `${pnlSize}px "Terminal Grotesque", sans-serif`;
+    ctx.font = `${pnlSize}px "Terminal Grotesque", "Share Tech Mono", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
     ctx.fillText(pnl, 48, 295);
     
@@ -867,7 +875,7 @@ function drawOverlayText(ctx, W, H) {
   ctx.fillText(pair, pillX + pillW + 20, pillY + 27);
   
   const pnlSize = pnl.length > 13 ? 52 : pnl.length > 10 ? 62 : 72;
-  ctx.font = pnlSize + 'px "Terminal Grotesque", sans-serif';
+  ctx.font = pnlSize + 'px "Terminal Grotesque", "Share Tech Mono", monospace';
   ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
   ctx.fillText(pnl, 48, 295);
   
