@@ -715,11 +715,6 @@ async function generate() {
     const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
     
     ctx.textAlign = 'left';
-    // Reset all shadow properties
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = 'transparent';
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
     
     // Logo
     ctx.drawImage(logoImg, 40, 38, 181, 70);
@@ -836,15 +831,6 @@ function drawVideoFrame() {
   const canvas = document.getElementById('previewCanvas');
   if (!canvas || !videoEl) return;
   const ctx = canvas.getContext('2d');
-  
-  // Reset all context properties
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.shadowBlur = 0;
-  ctx.shadowColor = 'transparent';
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
-  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
   const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
@@ -872,11 +858,6 @@ function drawOverlayText(ctx, W, H) {
   const pnlType = document.getElementById('pnlType').value;
   
   let pnl = formatPnl(pnlVal);
-  if (direction === 'Short') {
-    const wasPos = !pnl.startsWith('-');
-    if (wasPos) pnl = '-' + pnl.replace(/^\+/, '');
-    else pnl = '+' + pnl.replace(/^-/, '');
-  }
   
   const entryP = document.getElementById('entryPrice').value || '—';
   const markP = document.getElementById('markPrice').value || '—';
@@ -886,12 +867,7 @@ function drawOverlayText(ctx, W, H) {
   const isProfit = !pnl.startsWith('-');
   const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
   
-  // Reset all shadow and text properties
   ctx.textAlign = 'left';
-  ctx.shadowBlur = 0;
-  ctx.shadowColor = 'transparent';
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 0;
   
   ctx.drawImage(logoImg, 40, 38, 181, 70);
   
@@ -975,30 +951,17 @@ function startVideoRecord() {
     videoEl.muted = true;
   }
   
-  // Try best quality codecs with high bitrate
-  // Priority: MP4 first for best phone compatibility
+  // Simple MP4 with good quality
   let mimeType = 'video/mp4';
   let fileExt = 'mp4';
   
-  // Check for best available codec - MP4 first for iOS/Android compatibility
-  const codecs = [
-    'video/mp4;codecs=avc1.42E01E',  // H.264 Baseline - best compatibility
-    'video/mp4;codecs=avc1',          // H.264 generic
-    'video/mp4',                       // MP4 generic
-    'video/webm;codecs=vp9',          // VP9 - good quality
-    'video/webm;codecs=vp8',          // VP8 - fallback
-    'video/webm'                       // WebM generic
-  ];
-  
-  for (const codec of codecs) {
-    if (MediaRecorder.isTypeSupported(codec)) {
-      mimeType = codec;
-      fileExt = codec.includes('mp4') ? 'mp4' : 'webm';
-      break;
-    }
+  // Fallback to webm if mp4 not supported
+  if (!MediaRecorder.isTypeSupported(mimeType)) {
+    mimeType = 'video/webm';
+    fileExt = 'webm';
   }
   
-  // High bitrate for better quality (8 Mbps)
+  // Good quality settings
   const recorderOptions = { 
     mimeType,
     videoBitsPerSecond: 8000000
