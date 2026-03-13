@@ -213,10 +213,10 @@
       pointer-events: auto;
     }
     .import-section {
-      background: rgba(200, 184, 130, 0.05);
-      border: 1px solid rgba(200, 184, 130, 0.2);
+      background: transparent;
+      border: none;
       border-radius: 12px;
-      padding: 16px;
+      padding: 0;
       margin-bottom: 20px;
     }
     .mode-btns {
@@ -280,68 +280,71 @@
     <div class="panel">
       <!-- Import Section -->
       <div class="import-section" style="margin-bottom:20px;">
-        <div style="font-size:11px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:8px;">Import from Bulk Card</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <input id="importUrl" type="text" placeholder="Paste image URL..." style="flex:1;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;">
-          <label style="display:flex;align-items:center;justify-content:center;padding:10px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:12px;cursor:pointer;white-space:nowrap;">
+        <h2 style="margin-bottom:12px;">Import from Bulk Card</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:13px;letter-spacing:1px;">
+            CTRL+V to paste image
+          </div>
+          <label style="display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:12px;cursor:pointer;">
             📁
             <input type="file" accept="image/*" style="display:none;" onchange="importFromFile(event)">
           </label>
         </div>
-        <button onclick="importFromUrl()" style="width:100%;padding:10px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-family:'Playfair Display',serif;font-size:15px;letter-spacing:2px;cursor:pointer;">IMPORT & AUTOFILL</button>
         <div id="importStatus" style="font-size:12px;color:#555;letter-spacing:1px;margin-top:6px;text-align:center;padding:6px;border-radius:6px;display:none;"></div>
       </div>
 
-      <h2>Fill Trade Data</h2>
+      <!-- Fill Trade Data Section -->
+      <div class="import-section" style="margin-bottom:20px;">
+        <h2 style="margin-bottom:12px;">Fill Trade Data Manually</h2>
 
-      <div class="field">
-        <label>Direction</label>
-        <div class="dir-btns">
-          <button class="dir-btn active-long" id="btnLong" onclick="setDir('Long')">LONG</button>
-          <button class="dir-btn" id="btnShort" onclick="setDir('Short')">SHORT</button>
+        <div class="field">
+          <label>Direction</label>
+          <div class="dir-btns">
+            <button class="dir-btn active-long" id="btnLong" onclick="setDir('Long')">LONG</button>
+            <button class="dir-btn" id="btnShort" onclick="setDir('Short')">SHORT</button>
+          </div>
         </div>
-      </div>
-      
-      <div class="field">
-        <label>Leverage</label>
-        <input type="number" id="leverage" value="20" min="1" max="50">
-      </div>
-      
-      <div class="field">
-        <label>Trading Pair</label>
-        <select id="pair">
-          <option value="BTC-USD">BTC-USD</option>
-          <option value="ETH-USD">ETH-USD</option>
-          <option value="SOL-USD">SOL-USD</option>
-        </select>
-      </div>
-      
-      <div class="field">
-        <label>PnL Value</label>
-        <div class="pnl-row">
-          <input type="text" id="pnlValue" placeholder="50000" value="50000">
-          <select id="pnlType">
-            <option value="$">$</option>
-            <option value="%">%</option>
+        
+        <div class="field">
+          <label>Leverage</label>
+          <input type="number" id="leverage" value="50" min="1" max="50">
+        </div>
+        
+        <div class="field">
+          <label>Trading Pair</label>
+          <select id="pair">
+            <option value="BTC-USD">BTC-USD</option>
+            <option value="ETH-USD">ETH-USD</option>
+            <option value="SOL-USD">SOL-USD</option>
           </select>
         </div>
+        
+        <div class="field">
+          <label>PnL Value</label>
+          <div class="pnl-row">
+            <input type="text" id="pnlValue" placeholder="50000" value="">
+            <select id="pnlType">
+              <option value="$">$</option>
+              <option value="%">%</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="field">
+          <label>Entry Price</label>
+          <input type="text" id="entryPrice" placeholder="70000.00">
+        </div>
+        
+        <div class="field">
+          <label>Mark Price</label>
+          <input type="text" id="markPrice" placeholder="75000.00">
+        </div>
+        
+        <div class="field">
+          <label>Referral Code</label>
+          <input type="text" id="refCode" value="x.com/bulktrade">
+        </div>
       </div>
-      
-      <div class="field">
-        <label>Entry Price</label>
-        <input type="text" id="entryPrice" placeholder="70000.00">
-      </div>
-      
-      <div class="field">
-        <label>Mark Price</label>
-        <input type="text" id="markPrice" placeholder="75000.00">
-      </div>
-      
-      <div class="field">
-        <label>Referral Code</label>
-        <input type="text" id="refCode" value="x.com/bulktrade">
-      </div>
-      
       <div class="field">
         <label>Background</label>
         <div class="bg-grid" id="bgGrid"></div>
@@ -384,8 +387,8 @@
       </div>
       <canvas id="previewCanvas" style="display:none"></canvas>
       <button class="btn-generate" onclick="generate()">GENERATE CARD</button>
-      <button class="btn-download" id="btnDownload" onclick="downloadCard()">⬇ DOWNLOAD</button>
-      <button class="btn-download" id="btnCopy" style="border-color:#c8b882;color:#c8b882;" onclick="copyCard()">📋 COPY</button>
+      <button class="btn-download" id="btnDownload" onclick="downloadCard()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>DOWNLOAD</button>
+      <button class="btn-download" id="btnCopy" style="border-color:#c8b882;color:#c8b882;" onclick="copyCard()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>COPY</button>
     </div>
   </div>
 
@@ -914,8 +917,8 @@ function startVideoRecord() {
   videoEl.currentTime = 0;
   videoEl.muted = false; // Enable audio
   
-  // Capture canvas video stream
-  const canvasStream = canvas.captureStream(30);
+  // Capture canvas video stream at 60 FPS for smoother video
+  const canvasStream = canvas.captureStream(60);
   
   // Try to capture audio from original video
   let combinedStream;
@@ -937,18 +940,33 @@ function startVideoRecord() {
     videoEl.muted = true;
   }
   
-  // Try mp4 first (better Telegram support), fallback to webm
-  let mimeType = 'video/mp4';
-  let fileExt = 'mp4';
-  if (!MediaRecorder.isTypeSupported(mimeType)) {
-    mimeType = 'video/webm;codecs=vp9';
-    fileExt = 'webm';
-    if (!MediaRecorder.isTypeSupported(mimeType)) {
-      mimeType = 'video/webm';
+  // Try best quality codecs with high bitrate
+  let mimeType = 'video/webm;codecs=vp9';
+  let fileExt = 'webm';
+  
+  // Check for best available codec
+  const codecs = [
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/mp4',
+    'video/webm'
+  ];
+  
+  for (const codec of codecs) {
+    if (MediaRecorder.isTypeSupported(codec)) {
+      mimeType = codec;
+      fileExt = codec.includes('mp4') ? 'mp4' : 'webm';
+      break;
     }
   }
   
-  mediaRecorder = new MediaRecorder(combinedStream, { mimeType });
+  // High bitrate for better quality (8 Mbps)
+  const recorderOptions = { 
+    mimeType,
+    videoBitsPerSecond: 8000000
+  };
+  
+  mediaRecorder = new MediaRecorder(combinedStream, recorderOptions);
   const chunks = [];
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
   mediaRecorder.onstop = () => {
