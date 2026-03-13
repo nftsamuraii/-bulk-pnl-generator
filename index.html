@@ -385,6 +385,7 @@
       <canvas id="previewCanvas" style="display:none"></canvas>
       <button class="btn-generate" onclick="generate()">GENERATE CARD</button>
       <button class="btn-download" id="btnDownload" onclick="downloadCard()">⬇ DOWNLOAD</button>
+      <button class="btn-download" id="btnCopy" style="border-color:#00e8a2;color:#00e8a2;" onclick="copyCard()">📋 COPY</button>
     </div>
   </div>
 
@@ -667,6 +668,9 @@ async function generate() {
     dlBtn.style.borderColor = '#ff4060';
     dlBtn.style.color = '#ff4060';
     
+    // Hide COPY button for video mode
+    document.getElementById('btnCopy').classList.remove('visible');
+    
     videoEl.currentTime = 0;
     videoEl.muted = true;
     
@@ -754,6 +758,7 @@ async function generate() {
     document.getElementById('emptyState').style.display = 'none';
     canvas.style.display = 'block';
     document.getElementById('btnDownload').classList.add('visible');
+    document.getElementById('btnCopy').classList.add('visible');
   };
   
   const drawBg = (bgImg) => {
@@ -1033,6 +1038,26 @@ function downloadCard() {
   }
 }
 
+async function copyCard() {
+  const canvas = document.getElementById('previewCanvas');
+  const btn = document.getElementById('btnCopy');
+  
+  try {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    btn.innerHTML = '✓ COPIED!';
+    btn.style.background = 'rgba(0,232,162,0.2)';
+    setTimeout(() => {
+      btn.innerHTML = '📋 COPY';
+      btn.style.background = 'transparent';
+    }, 2000);
+  } catch (e) {
+    alert('Could not copy: ' + e.message);
+  }
+}
+
 // Paste handler
 document.addEventListener('paste', function(e) {
   const items = e.clipboardData && e.clipboardData.items;
@@ -1096,6 +1121,7 @@ If NO (regular photo, meme, screenshot of something else), respond with exactly:
     canvas.style.display = 'none';
     document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('btnDownload').classList.remove('visible');
+    document.getElementById('btnCopy').classList.remove('visible');
     
     if (parsed.direction) setDir(parsed.direction);
     if (parsed.leverage) document.getElementById('leverage').value = Math.min(parsed.leverage, 50);
@@ -1205,6 +1231,7 @@ Be precise with numbers - copy them exactly as shown. If a field is truly not vi
     canvas.style.display = 'none';
     document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('btnDownload').classList.remove('visible');
+    document.getElementById('btnCopy').classList.remove('visible');
 
     if (parsed.direction) setDir(parsed.direction);
     if (parsed.leverage) document.getElementById('leverage').value = Math.min(parsed.leverage, 50);
