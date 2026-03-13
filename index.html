@@ -220,6 +220,12 @@
       padding: 0;
       margin-bottom: 20px;
     }
+    #importDropZone:focus #importBtn,
+    #importDropZone:focus-within #importBtn {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(200, 184, 130, 0.1);
+    }
     .mode-btns {
       display: flex;
       gap: 6px;
@@ -282,10 +288,11 @@
       <!-- Import Section -->
       <div class="import-section" style="margin-bottom:20px;">
         <h2 style="margin-bottom:12px;">Import from Bulk Card</h2>
-        <div id="importDropZone" style="display:flex;gap:8px;align-items:center;">
-          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:13px;letter-spacing:1px;cursor:pointer;" onclick="document.getElementById('importDropZone').focus()" tabindex="0">
-            CTRL+V to paste card
+        <div id="importDropZone" tabindex="0" style="display:flex;gap:8px;align-items:center;" onclick="this.focus(); document.getElementById('importHint').textContent = 'Ready! Now press CTRL+V';">
+          <div id="importBtn" style="flex:1;display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:13px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;">
+            <span id="importHint">Click here, then CTRL+V</span>
           </div>
+          <span style="color:#555;font-size:12px;">or</span>
           <label style="display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:12px;cursor:pointer;">
             📁
             <input type="file" accept="image/*" style="display:none;" onchange="importFromFile(event)">
@@ -701,10 +708,9 @@ async function generate() {
   dlBtn.style.color = '#c8b882';
   
   const drawContent = () => {
-    // For Long: + is profit (green), - is loss (red)
-    // For Short: + is loss (red), - is profit (green)
-    const rawIsPositive = !pnl.startsWith('-');
-    const isProfit = direction === 'Short' ? !rawIsPositive : rawIsPositive;
+    // Simple logic: - is always red (loss), + is always green (profit)
+    // The PnL value already represents the actual result
+    const isProfit = !pnl.startsWith('-');
     const pnlColor = isProfit ? '#00e8a2' : '#ff4060';
     const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
     
@@ -863,10 +869,8 @@ function drawOverlayText(ctx, W, H) {
   const markP = document.getElementById('markPrice').value || '—';
   const refCode = document.getElementById('refCode').value || 'x.com/bulktrade';
   
-  // For Long: + is profit (green), - is loss (red)
-  // For Short: + is loss (red), - is profit (green)
-  const rawIsPositive = !pnl.startsWith('-');
-  const isProfit = direction === 'Short' ? !rawIsPositive : rawIsPositive;
+  // Simple logic: - is always red (loss), + is always green (profit)
+  const isProfit = !pnl.startsWith('-');
   const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
   
   ctx.drawImage(logoImg, 40, 38, 181, 70);
@@ -1195,8 +1199,11 @@ async function analyzeCardSmart(imgData) {
     if (status) {
       status.style.display = 'block';
       status.style.color = '#00e8a2';
-      status.textContent = '✓ Fields filled! Choose a background and hit GENERATE';
+      status.textContent = '✓ Card imported successfully!';
     }
+    
+    // Auto-generate card after import
+    setTimeout(() => generate(), 100);
   } catch (err) { setAsBg(imgData); }
 }
 
