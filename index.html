@@ -273,7 +273,7 @@
 <body>
   <!-- Header -->
   <header style="max-width:1100px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;padding:20px 0;">
-    <h1 style="font-family:'Playfair Display',serif;font-size:24px;font-weight:500;letter-spacing:4px;color:#c8b882;text-transform:uppercase;margin:0;">Bulk PnL Generator</h1>
+    <img src="https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/BULKPNLCARD.png" alt="BULK PNL CARD" style="height:40px;margin:0;">
   </header>
 
   <div class="container">
@@ -1115,7 +1115,16 @@ async function analyzeCardSmart(imgData) {
     document.getElementById('btnDownload').classList.remove('visible');
     document.getElementById('btnCopy').classList.remove('visible');
     
-    if (parsed.direction) setDir(parsed.direction);
+    // Determine direction from parsed data
+    let dir = 'Long';
+    if (parsed.direction) {
+      dir = parsed.direction.toLowerCase().includes('long') ? 'Long' : 'Short';
+    }
+    
+    // Set direction FIRST (this resets selectedBg to 0 and re-renders thumbnails)
+    setDir(dir);
+    
+    // Fill all form fields
     if (parsed.leverage) document.getElementById('leverage').value = Math.min(parsed.leverage, 50);
     if (parsed.pair) {
       const sel = document.getElementById('pair');
@@ -1128,6 +1137,14 @@ async function analyzeCardSmart(imgData) {
     if (parsed.entryPrice) document.getElementById('entryPrice').value = parsed.entryPrice;
     if (parsed.markPrice) document.getElementById('markPrice').value = parsed.markPrice;
     if (parsed.referralCode) document.getElementById('refCode').value = parsed.referralCode;
+    
+    // NOW select background AFTER setDir has re-rendered thumbnails
+    // First background (index 0) is already selected by setDir, just ensure visual state
+    selectedBg = 0;
+    const bgThumbs = document.querySelectorAll('.bg-thumb[data-idx]');
+    bgThumbs.forEach(el => el.classList.remove('selected'));
+    const targetThumb = document.querySelector('.bg-thumb[data-idx="0"]');
+    if (targetThumb) targetThumb.classList.add('selected');
     
     const status = document.getElementById('importStatus');
     if (status) {
@@ -1225,7 +1242,16 @@ async function analyzeCard(imageData, isBase64) {
     document.getElementById('btnDownload').classList.remove('visible');
     document.getElementById('btnCopy').classList.remove('visible');
 
-    if (parsed.direction) setDir(parsed.direction);
+    // Determine direction from parsed data
+    let dir = 'Long';
+    if (parsed.direction) {
+      dir = parsed.direction.toLowerCase().includes('long') ? 'Long' : 'Short';
+    }
+    
+    // Set direction FIRST (this resets selectedBg to 0 and re-renders thumbnails)
+    setDir(dir);
+    
+    // Fill all form fields
     if (parsed.leverage) document.getElementById('leverage').value = Math.min(parsed.leverage, 50);
     if (parsed.pair) {
       const sel = document.getElementById('pair');
@@ -1238,6 +1264,14 @@ async function analyzeCard(imageData, isBase64) {
     if (parsed.entryPrice) document.getElementById('entryPrice').value = parsed.entryPrice;
     if (parsed.markPrice) document.getElementById('markPrice').value = parsed.markPrice;
     if (parsed.referralCode) document.getElementById('refCode').value = parsed.referralCode;
+
+    // NOW select background AFTER setDir has re-rendered thumbnails
+    // First background (index 0) is already selected by setDir, just ensure visual state
+    selectedBg = 0;
+    const bgThumbs = document.querySelectorAll('.bg-thumb[data-idx]');
+    bgThumbs.forEach(el => el.classList.remove('selected'));
+    const targetThumb = document.querySelector('.bg-thumb[data-idx="0"]');
+    if (targetThumb) targetThumb.classList.add('selected');
 
     showImportStatus('✓ Fields filled! Now choose a background and hit GENERATE', '#00e8a2');
   } catch (err) {
