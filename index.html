@@ -184,6 +184,7 @@
       color: #0a0a0a;
       font-family: 'Playfair Display', serif;
       font-size: 16px;
+      font-weight: 600;
       letter-spacing: 3px;
       cursor: pointer;
       transition: all 0.2s;
@@ -237,14 +238,14 @@
       color: #666;
     }
     .mode-btn.active-img {
-      border-color: #ffffff;
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
+      border-color: var(--gold);
+      background: rgba(200, 184, 130, 0.12);
+      color: var(--gold);
     }
     .mode-btn.active-vid {
-      border-color: #ffffff;
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
+      border-color: var(--gold);
+      background: rgba(200, 184, 130, 0.12);
+      color: var(--gold);
     }
     .upload-label {
       display: block;
@@ -281,9 +282,9 @@
       <!-- Import Section -->
       <div class="import-section" style="margin-bottom:20px;">
         <h2 style="margin-bottom:12px;">Import from Bulk Card</h2>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:13px;letter-spacing:1px;">
-            CTRL+V to paste image
+        <div id="importDropZone" style="display:flex;gap:8px;align-items:center;">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:13px;letter-spacing:1px;cursor:pointer;" onclick="document.getElementById('importDropZone').focus()" tabindex="0">
+            CTRL+V to paste card
           </div>
           <label style="display:flex;align-items:center;justify-content:center;padding:12px 14px;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;color:#888;font-size:12px;cursor:pointer;">
             📁
@@ -361,7 +362,6 @@
             📁 UPLOAD FROM DEVICE
             <input type="file" accept="image/*" style="display:none;" onchange="loadImageFile(event)">
           </label>
-          <div id="pasteHint" style="font-size:11px;color:#555;letter-spacing:1px;text-align:center;margin-top:8px;">CTRL+V — PASTE IMAGE FROM CLIPBOARD</div>
           <div class="hint">💡 <b>HOW TO USE:</b><br>1. Upload an image from your device<br>2. Or paste a direct image URL above<br>3. Or press <b class="light">Ctrl+V</b> to paste from clipboard</div>
         </div>
         
@@ -464,10 +464,17 @@ function setDir(d) {
   document.getElementById('btnLong').className = 'dir-btn' + (d === 'Long' ? ' active-long' : '');
   document.getElementById('btnShort').className = 'dir-btn' + (d === 'Short' ? ' active-short' : '');
   
-  // Reset selection and re-render thumbnails
+  // Re-render thumbnails but keep custom background if set
+  const hadCustomBg = customBgDataUrl !== null;
   selectedBg = 0;
-  customBgDataUrl = null;
   renderBgThumbs();
+  
+  // If user had custom background, keep URL thumb selected
+  if (hadCustomBg) {
+    document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
+    const urlThumb = document.getElementById('urlThumb');
+    if (urlThumb) urlThumb.classList.add('selected');
+  }
   
   // Toggle short-mode class for red/green highlighting (after render)
   const bgGrid = document.getElementById('bgGrid');
@@ -694,17 +701,20 @@ async function generate() {
   dlBtn.style.color = '#c8b882';
   
   const drawContent = () => {
-    const isProfit = !pnl.startsWith('-');
+    // For Long: + is profit (green), - is loss (red)
+    // For Short: + is loss (red), - is profit (green)
+    const rawIsPositive = !pnl.startsWith('-');
+    const isProfit = direction === 'Short' ? !rawIsPositive : rawIsPositive;
     const pnlColor = isProfit ? '#00e8a2' : '#ff4060';
     const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
     
     ctx.textAlign = 'left';
     ctx.shadowBlur = 0;
     
-    // Logo - опущено нижче
+    // Logo
     ctx.drawImage(logoImg, 40, 38, 181, 70);
     
-    // Direction pill - опущено нижче
+    // Direction pill
     const pillX = 48, pillY = 138, pillH = 52, pillR = 10;
     ctx.font = '500 32px "IBM Plex Sans", sans-serif';
     const dirTxtW = ctx.measureText(direction).width;
@@ -722,18 +732,18 @@ async function generate() {
     ctx.fillStyle = '#ffffff';
     ctx.fillText(` ${leverage}x`, pillX + 14 + dirTxtW, pillY + 34);
     
-    // Pair - вирівняно по центру з pill
+    // Pair
     ctx.fillStyle = '#ffffff';
     ctx.font = '500 40px "IBM Plex Sans", sans-serif';
     ctx.fillText(pair, pillX + pillW + 20, pillY + 36);
     
-    // PnL - збільшений шрифт
+    // PnL
     const pnlSize = pnl.length > 13 ? 82 : pnl.length > 10 ? 96 : 110;
     ctx.font = `${pnlSize}px "Terminal Grotesque", "Share Tech Mono", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
     ctx.fillText(pnl, 48, 330);
     
-    // Details - опущено нижче
+    // Details
     const details = [
       ['Entry Price', entryP],
       ['Mark Price', markP],
@@ -742,14 +752,13 @@ async function generate() {
     const detailStartY = 400;
     details.forEach(([label, val], i) => {
       const y = detailStartY + i * 36;
-      // Label - 24px, IBM Plex Sans, grey
       ctx.font = '400 24px "IBM Plex Sans", sans-serif';
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
       ctx.fillText(label, 48, y);
-      // Value - 32px, Archivo (DIN-like), white
       ctx.font = '500 32px "Archivo", sans-serif';
       ctx.fillStyle = '#ffffff';
       ctx.fillText(val, 200, y);
+    });
     });
     
     document.getElementById('emptyState').style.display = 'none';
@@ -855,7 +864,10 @@ function drawOverlayText(ctx, W, H) {
   const markP = document.getElementById('markPrice').value || '—';
   const refCode = document.getElementById('refCode').value || 'x.com/bulktrade';
   
-  const isProfit = !pnl.startsWith('-');
+  // For Long: + is profit (green), - is loss (red)
+  // For Short: + is loss (red), - is profit (green)
+  const rawIsPositive = !pnl.startsWith('-');
+  const isProfit = direction === 'Short' ? !rawIsPositive : rawIsPositive;
   const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
   
   ctx.drawImage(logoImg, 40, 38, 181, 70);
@@ -1072,23 +1084,39 @@ async function copyCard() {
   }
 }
 
-// Paste handler
+// Paste handler - determines context based on where paste happens
 document.addEventListener('paste', function(e) {
   const items = e.clipboardData && e.clipboardData.items;
   if (!items) return;
+  
+  // Check if paste is in Import zone (for card analysis)
+  const importZone = document.getElementById('importDropZone');
+  const isImportFocused = importZone && (importZone.contains(document.activeElement) || document.activeElement === importZone);
+  
+  // Check if paste is in URL input field (for background)
+  const urlInput = document.getElementById('urlInput');
+  const isUrlInputFocused = urlInput && document.activeElement === urlInput;
+  
   for (let i = 0; i < items.length; i++) {
     if (items[i].type.startsWith('image/')) {
       const file = items[i].getAsFile();
       const reader = new FileReader();
       reader.onload = ev => {
         const imgData = ev.target.result;
-        const status = document.getElementById('importStatus');
-        if (status) {
-          status.style.display = 'block';
-          status.style.color = '#c8b882';
-          status.textContent = 'Analyzing pasted image...';
+        
+        if (isImportFocused) {
+          // Paste in Import section - analyze the card
+          const status = document.getElementById('importStatus');
+          if (status) {
+            status.style.display = 'block';
+            status.style.color = '#c8b882';
+            status.textContent = 'Analyzing pasted card...';
+          }
+          analyzeCardSmart(imgData);
+        } else {
+          // Paste anywhere else - set as background
+          setAsBg(imgData);
         }
-        analyzeCardSmart(imgData);
       };
       reader.readAsDataURL(file);
       e.preventDefault();
