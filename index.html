@@ -197,9 +197,9 @@
       padding: 12px;
       margin-top: 10px;
       background: transparent;
-      border: 1px solid var(--green);
+      border: 1px solid #c8b882;
       border-radius: 8px;
-      color: var(--green);
+      color: #c8b882;
       font-family: 'Playfair Display', serif;
       font-size: 14px;
       letter-spacing: 2px;
@@ -288,7 +288,7 @@
             <input type="file" accept="image/*" style="display:none;" onchange="importFromFile(event)">
           </label>
         </div>
-        <button onclick="importFromUrl()" style="width:100%;padding:10px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-family:'Playfair Display',serif;font-size:15px;letter-spacing:2px;cursor:pointer;">✦ IMPORT & AUTOFILL</button>
+        <button onclick="importFromUrl()" style="width:100%;padding:10px;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-family:'Playfair Display',serif;font-size:15px;letter-spacing:2px;cursor:pointer;">IMPORT & AUTOFILL</button>
         <div id="importStatus" style="font-size:12px;color:#555;letter-spacing:1px;margin-top:6px;text-align:center;padding:6px;border-radius:6px;display:none;"></div>
       </div>
 
@@ -385,7 +385,7 @@
       <canvas id="previewCanvas" style="display:none"></canvas>
       <button class="btn-generate" onclick="generate()">GENERATE CARD</button>
       <button class="btn-download" id="btnDownload" onclick="downloadCard()">⬇ DOWNLOAD</button>
-      <button class="btn-download" id="btnCopy" style="border-color:#00e8a2;color:#00e8a2;" onclick="copyCard()">📋 COPY</button>
+      <button class="btn-download" id="btnCopy" style="border-color:#c8b882;color:#c8b882;" onclick="copyCard()">📋 COPY</button>
     </div>
   </div>
 
@@ -642,12 +642,6 @@ async function generate() {
       (pnlType === '%' ? '%' : '');
   }
   
-  if (direction === 'Short') {
-    const wasPos = !pnl.startsWith('-');
-    if (wasPos) pnl = '-' + pnl.replace(/^\+/, '');
-    else pnl = '+' + pnl.replace(/^-/, '');
-  }
-  
   const entryP = document.getElementById('entryPrice').value || '—';
   const markP = document.getElementById('markPrice').value || '—';
   const refCode = document.getElementById('refCode').value || 'x.com/bulktrade';
@@ -693,8 +687,8 @@ async function generate() {
   // Reset button for image mode
   const dlBtn = document.getElementById('btnDownload');
   dlBtn.innerHTML = '⬇ DOWNLOAD';
-  dlBtn.style.borderColor = '#00e8a2';
-  dlBtn.style.color = '#00e8a2';
+  dlBtn.style.borderColor = '#c8b882';
+  dlBtn.style.color = '#c8b882';
   
   const drawContent = () => {
     const isProfit = !pnl.startsWith('-');
@@ -762,6 +756,7 @@ async function generate() {
   };
   
   const drawBg = (bgImg) => {
+    ctx.clearRect(0, 0, CARD_W, CARD_H);
     const iw = bgImg.naturalWidth || bgImg.width;
     const ih = bgImg.naturalHeight || bgImg.height;
     const scale = Math.max(CARD_W / iw, CARD_H / ih);
@@ -781,6 +776,7 @@ async function generate() {
   };
   
   const drawGradientBg = () => {
+    ctx.clearRect(0, 0, CARD_W, CARD_H);
     const gradient = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
     gradient.addColorStop(0, bgGradients[selectedBg][0]);
     gradient.addColorStop(1, bgGradients[selectedBg][1]);
@@ -1048,7 +1044,7 @@ async function copyCard() {
       new ClipboardItem({ 'image/png': blob })
     ]);
     btn.innerHTML = '✓ COPIED!';
-    btn.style.background = 'rgba(0,232,162,0.2)';
+    btn.style.background = 'rgba(255,255,255,0.2)';
     setTimeout(() => {
       btn.innerHTML = '📋 COPY';
       btn.style.background = 'transparent';
@@ -1086,21 +1082,14 @@ document.addEventListener('paste', function(e) {
 async function analyzeCardSmart(imgData) {
   try {
     const mediaType = imgData.split(';')[0].split(':')[1] || 'image/png';
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const base64Data = imgData.split(',')[1];
+    
+    const response = await fetch('https://bulk-pnl-api.vercel.app/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imgData.split(',')[1] } },
-            { type: 'text', text: `Is this a Bulk PnL trading card (showing BULK logo, direction Long/Short, leverage, trading pair, PnL amount, Entry Price, Mark Price)? If YES, extract data as JSON only:
-{"direction":"Long","leverage":20,"pair":"SOL-USD","pnl":"50000","pnlType":"$","entryPrice":"70000","markPrice":"71000","referralCode":"x.com/bulktrade"}
-If NO (regular photo, meme, screenshot of something else), respond with exactly: NOT_A_CARD` }
-          ]
-        }]
+        image: base64Data,
+        mediaType: mediaType
       })
     });
     const data = await response.json();
@@ -1114,10 +1103,13 @@ If NO (regular photo, meme, screenshot of something else), respond with exactly:
     try { parsed = JSON.parse(text.replace(/```json[\n]?|```/g, '').trim()); }
     catch (e) { setAsBg(imgData); return; }
     
+    // Clear everything before filling fields
     customBgDataUrl = null;
     videoEl = null;
     cancelAnimationFrame(animFrameId);
     const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     canvas.style.display = 'none';
     document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('btnDownload').classList.remove('visible');
@@ -1181,39 +1173,36 @@ async function importFromUrl() {
 async function analyzeCard(imageData, isBase64) {
   showImportStatus('Analyzing card...', '#c8b882');
   try {
-    const imageContent = isBase64
-      ? { type: 'image', source: { type: 'base64', media_type: imageData.split(';')[0].split(':')[1] || 'image/jpeg', data: imageData.split(',')[1] } }
-      : { type: 'image', source: { type: 'url', url: imageData } };
+    let base64Data, mediaType;
+    
+    if (isBase64) {
+      mediaType = imageData.split(';')[0].split(':')[1] || 'image/jpeg';
+      base64Data = imageData.split(',')[1];
+    } else {
+      // For URL, we need to fetch and convert to base64
+      showImportStatus('Fetching image...', '#c8b882');
+      const imgResponse = await fetch(imageData);
+      const blob = await imgResponse.blob();
+      const reader = new FileReader();
+      const dataUrl = await new Promise(resolve => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      mediaType = dataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+      base64Data = dataUrl.split(',')[1];
+    }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://bulk-pnl-api.vercel.app/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            imageContent,
-            { type: 'text', text: `Look carefully at this trading PnL card image. Read ALL text visible on the card precisely. Extract and respond ONLY with valid JSON (no markdown, no explanation):
-{
-  "direction": "Long" or "Short" (read from the pill/badge near top),
-  "leverage": 40 (the number before 'x' in the badge, as integer),
-  "pair": "ETH-USD" (the trading pair text, e.g. SOL-USD, BTC-USD),
-  "pnl": "14122.69" (the large number - only digits and dot, no + - $ % symbols),
-  "pnlType": "$" or "%" (based on whether the large number shows $ or %),
-  "entryPrice": "1980.554" (exact value next to Entry Price label),
-  "markPrice": "2079.010" (exact value next to Mark Price label),
-  "referralCode": "x.com/bulktrade" (text next to Referral code label)
-}
-Be precise with numbers - copy them exactly as shown. If a field is truly not visible return null.` }
-          ]
-        }]
+        image: base64Data,
+        mediaType: mediaType
       })
     });
     
     const data = await response.json();
-    if (data.error) { showImportStatus('API Error: ' + data.error.message, '#ff4060'); return; }
+    if (data.error) { showImportStatus('API Error: ' + data.error, '#ff4060'); return; }
     if (!data.content || !data.content.length) { showImportStatus('Empty response from API', '#ff4060'); return; }
     
     const text = (data.content.find(c => c.type === 'text') || data.content[0])?.text || '';
@@ -1224,10 +1213,13 @@ Be precise with numbers - copy them exactly as shown. If a field is truly not vi
       return;
     }
 
+    // Clear everything before filling fields
     customBgDataUrl = null;
     videoEl = null;
     cancelAnimationFrame(animFrameId);
     const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     canvas.style.display = 'none';
     document.getElementById('emptyState').style.display = 'flex';
     document.getElementById('btnDownload').classList.remove('visible');
