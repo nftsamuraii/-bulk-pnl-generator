@@ -715,7 +715,11 @@ async function generate() {
     const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
     
     ctx.textAlign = 'left';
+    // Reset all shadow properties
     ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
     
     // Logo
     ctx.drawImage(logoImg, 40, 38, 181, 70);
@@ -872,6 +876,13 @@ function drawOverlayText(ctx, W, H) {
   // Simple logic: - is always red (loss), + is always green (profit)
   const isProfit = !pnl.startsWith('-');
   const dirColor = direction === 'Long' ? '#00e8a2' : '#ff4060';
+  
+  // Reset all shadow and text properties
+  ctx.textAlign = 'left';
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'transparent';
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
   
   ctx.drawImage(logoImg, 40, 38, 181, 70);
   
