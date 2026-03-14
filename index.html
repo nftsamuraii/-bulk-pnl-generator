@@ -746,6 +746,8 @@ async function generate() {
     const pnlSize = pnl.length > 13 ? 82 : pnl.length > 10 ? 96 : 110;
     ctx.font = `${pnlSize}px "Terminal Grotesque", "Share Tech Mono", monospace`;
     ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
+    ctx.strokeStyle = 'transparent';
+    ctx.lineWidth = 0;
     ctx.fillText(pnl, 48, 330);
     
     // Details
@@ -894,6 +896,8 @@ function drawOverlayText(ctx, W, H) {
   const pnlSize = pnl.length > 13 ? 82 : pnl.length > 10 ? 96 : 110;
   ctx.font = pnlSize + 'px "Terminal Grotesque", "Share Tech Mono", monospace';
   ctx.fillStyle = isProfit ? '#17C784' : '#cc2244';
+  ctx.strokeStyle = 'transparent';
+  ctx.lineWidth = 0;
   ctx.fillText(pnl, 48, 330);
   
   const details = [['Entry Price', entryP], ['Mark Price', markP], ['Referral code', refCode]];
