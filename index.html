@@ -1194,7 +1194,10 @@ async function analyzeCardSmart(imgData) {
     const bgThumbs = document.querySelectorAll('.bg-thumb[data-idx]');
     bgThumbs.forEach(el => el.classList.remove('selected'));
     const targetThumb = document.querySelector(`.bg-thumb[data-idx="${selectedBg}"]`);
-    if (targetThumb) targetThumb.classList.add('selected');
+    if (targetThumb) {
+      targetThumb.classList.add('selected');
+      targetThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
     
     const status = document.getElementById('importStatus');
     if (status) {
@@ -1318,15 +1321,24 @@ async function analyzeCard(imageData, isBase64) {
     if (parsed.markPrice) document.getElementById('markPrice').value = parsed.markPrice;
     if (parsed.referralCode) document.getElementById('refCode').value = parsed.referralCode;
 
-    // NOW select background AFTER setDir has re-rendered thumbnails
-    // First background (index 0) is already selected by setDir, just ensure visual state
-    selectedBg = 0;
+    // Select background based on PnL (red = short bg, green = long bg)
+    const pnlValue = parsed.pnl || 0;
+    const isLoss = String(pnlValue).startsWith('-');
+    const firstShortBgIndex = bgImages.findIndex(src => src.includes('short_'));
+    selectedBg = isLoss ? firstShortBgIndex : 0;
+    
     const bgThumbs = document.querySelectorAll('.bg-thumb[data-idx]');
     bgThumbs.forEach(el => el.classList.remove('selected'));
-    const targetThumb = document.querySelector('.bg-thumb[data-idx="0"]');
-    if (targetThumb) targetThumb.classList.add('selected');
+    const targetThumb = document.querySelector(`.bg-thumb[data-idx="${selectedBg}"]`);
+    if (targetThumb) {
+      targetThumb.classList.add('selected');
+      targetThumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
 
     showImportStatus('✓ Fields filled! Now choose a background and hit GENERATE', '#00e8a2');
+    
+    // Auto-generate card after import
+    setTimeout(() => generate(), 100);
   } catch (err) {
     showImportStatus('Error: ' + err.message, '#ff4060');
   }
