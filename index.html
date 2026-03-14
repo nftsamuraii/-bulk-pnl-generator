@@ -115,12 +115,26 @@
     .bg-grid {
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
+      overflow-x: auto;
+      padding-bottom: 8px;
       margin-bottom: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: #444 transparent;
+    }
+    .bg-grid::-webkit-scrollbar {
+      height: 6px;
+    }
+    .bg-grid::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .bg-grid::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
     }
     .bg-thumb {
       width: 60px;
       height: 60px;
+      min-width: 60px;
       border-radius: 8px;
       border: 2px solid var(--border);
       cursor: pointer;
@@ -138,11 +152,11 @@
     .bg-thumb.selected {
       border-color: var(--green);
     }
-    /* Short direction - red highlight */
-    .bg-grid.short-mode .bg-thumb:hover {
+    /* Short backgrounds - red highlight */
+    .bg-thumb.short-bg:hover {
       border-color: var(--red);
     }
-    .bg-grid.short-mode .bg-thumb.selected {
+    .bg-thumb.short-bg.selected {
       border-color: var(--red);
     }
     .preview-wrap {
@@ -363,8 +377,8 @@
         </div>
         
         <div id="imageMode">
-          <input id="urlInput" type="text" placeholder="Paste image URL..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:6px;" oninput="loadUrlBg(this.value)">
-          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">— OR —</div>
+          <input id="urlInput" type="text" placeholder="Paste copied image or URL..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:6px;" oninput="loadUrlBg(this.value)">
+          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">OR</div>
           <label class="upload-label">
             📁 UPLOAD FROM DEVICE
             <input type="file" accept="image/*" style="display:none;" onchange="loadImageFile(event)">
@@ -374,7 +388,7 @@
         
         <div id="videoMode" style="display:none;">
           <input id="videoUrlInput" type="text" placeholder="Paste video URL (mp4, webm)..." style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:8px;" onchange="loadVideoBg(this.value)">
-          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">— OR —</div>
+          <div style="text-align:center;margin-bottom:8px;font-size:11px;color:#555;letter-spacing:1px;">OR</div>
           <label class="upload-label">
             📁 UPLOAD FROM DEVICE
             <input type="file" accept="video/*" style="display:none;" onchange="loadVideoFile(event)">
@@ -416,22 +430,25 @@ let urlMode = 'image';
 // GitHub assets base URL
 const ASSETS_BASE = 'https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/';
 
-// Background images for Long and Short
-const longBgImages = [
+// Background images (same for Long and Short)
+const bgImages = [
   ASSETS_BASE + 'long_background1.png',
   ASSETS_BASE + 'long_background2.png',
-  ASSETS_BASE + 'long_background3.png',
-  ASSETS_BASE + 'long_background4.png'
-];
-
-const shortBgImages = [
-  ASSETS_BASE + 'short_background1.png',
-  ASSETS_BASE + 'short_background2.png'
+  ASSETS_BASE + 'long_background3.jfif',
+  ASSETS_BASE + 'long_background4.png',
+  ASSETS_BASE + 'long_background5.jfif',
+  ASSETS_BASE + 'long_background6.png',
+  ASSETS_BASE + 'long_background7.jfif',
+  ASSETS_BASE + 'long_background8.jfif',
+  ASSETS_BASE + 'short_background1.jfif',
+  ASSETS_BASE + 'short_background2.png',
+  ASSETS_BASE + 'short_background3.jfif',
+  ASSETS_BASE + 'short_background4.jfif',
+  ASSETS_BASE + 'short_background5.jpg'
 ];
 
 // Preload images
-const loadedLongBgImgs = longBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
-const loadedShortBgImgs = shortBgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
+const loadedBgImgs = bgImages.map(src => { const img = new Image(); img.crossOrigin = 'anonymous'; img.src = src; return img; });
 
 // Preload fonts for canvas
 document.fonts.load('72px "Terminal Grotesque"').then(() => console.log('Terminal Grotesque loaded'));
@@ -439,12 +456,12 @@ document.fonts.load('400 24px "Roboto Condensed"').then(() => console.log('Robot
 
 function renderBgThumbs() {
   const grid = document.getElementById('bgGrid');
-  const images = direction === 'Long' ? longBgImages : shortBgImages;
   grid.innerHTML = '';
   
-  images.forEach((src, idx) => {
+  bgImages.forEach((src, idx) => {
     const div = document.createElement('div');
-    div.className = 'bg-thumb' + (idx === selectedBg ? ' selected' : '');
+    const isShortBg = src.includes('short_');
+    div.className = 'bg-thumb' + (idx === selectedBg ? ' selected' : '') + (isShortBg ? ' short-bg' : '');
     div.dataset.idx = idx;
     div.onclick = () => selectBg(idx);
     div.style.backgroundImage = `url(${src})`;
@@ -471,24 +488,10 @@ function setDir(d) {
   document.getElementById('btnLong').className = 'dir-btn' + (d === 'Long' ? ' active-long' : '');
   document.getElementById('btnShort').className = 'dir-btn' + (d === 'Short' ? ' active-short' : '');
   
-  // Re-render thumbnails but keep custom background if set
-  const hadCustomBg = customBgDataUrl !== null;
-  selectedBg = 0;
-  renderBgThumbs();
-  
-  // If user had custom background, keep URL thumb selected
-  if (hadCustomBg) {
-    document.querySelectorAll('.bg-thumb[data-idx]').forEach(el => el.classList.remove('selected'));
-    const urlThumb = document.getElementById('urlThumb');
-    if (urlThumb) urlThumb.classList.add('selected');
-  }
-  
-  // Toggle short-mode class for red/green highlighting (after render)
-  const bgGrid = document.getElementById('bgGrid');
-  if (d === 'Short') {
-    bgGrid.classList.add('short-mode');
-  } else {
-    bgGrid.classList.remove('short-mode');
+  // Auto-regenerate card if preview is visible
+  const canvas = document.getElementById('previewCanvas');
+  if (canvas && canvas.style.display !== 'none') {
+    generate();
   }
 }
 
@@ -499,6 +502,12 @@ function selectBg(idx) {
   const thumb = document.querySelector(`.bg-thumb[data-idx="${idx}"]`);
   if (thumb) thumb.classList.add('selected');
   document.getElementById('urlThumb').classList.remove('selected');
+  
+  // Auto-regenerate card if preview is visible
+  const canvas = document.getElementById('previewCanvas');
+  if (canvas && canvas.style.display !== 'none') {
+    generate();
+  }
 }
 
 function setUrlMode(mode) {
@@ -819,8 +828,7 @@ async function generate() {
     img.src = customBgDataUrl;
   } else {
     // Use preloaded background images
-    const bgArr = direction === 'Long' ? loadedLongBgImgs : loadedShortBgImgs;
-    const bgImg = bgArr[selectedBg] || bgArr[0];
+    const bgImg = loadedBgImgs[selectedBg] || loadedBgImgs[0];
     if (bgImg.complete && bgImg.naturalWidth > 0) {
       drawBg(bgImg);
     } else {
@@ -1177,12 +1185,15 @@ async function analyzeCardSmart(imgData) {
     if (parsed.markPrice) document.getElementById('markPrice').value = parsed.markPrice;
     if (parsed.referralCode) document.getElementById('refCode').value = parsed.referralCode;
     
-    // NOW select background AFTER setDir has re-rendered thumbnails
-    // First background (index 0) is already selected by setDir, just ensure visual state
-    selectedBg = 0;
+    // Select background based on PnL (red = short bg, green = long bg)
+    const pnlValue = parsed.pnl || 0;
+    const isLoss = String(pnlValue).startsWith('-');
+    const firstShortBgIndex = bgImages.findIndex(src => src.includes('short_'));
+    selectedBg = isLoss ? firstShortBgIndex : 0;
+    
     const bgThumbs = document.querySelectorAll('.bg-thumb[data-idx]');
     bgThumbs.forEach(el => el.classList.remove('selected'));
-    const targetThumb = document.querySelector('.bg-thumb[data-idx="0"]');
+    const targetThumb = document.querySelector(`.bg-thumb[data-idx="${selectedBg}"]`);
     if (targetThumb) targetThumb.classList.add('selected');
     
     const status = document.getElementById('importStatus');
