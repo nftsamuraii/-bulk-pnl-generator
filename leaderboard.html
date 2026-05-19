@@ -179,6 +179,17 @@ function loadPhoto(e) {
 function setPhoto(dataUrl) {
   photoBg = dataUrl;
   origPixels = null;
+  // Save original pixels immediately using a temp canvas
+  const tmpImg = new Image();
+  tmpImg.onload = () => {
+    const tmp = document.createElement('canvas');
+    tmp.width = tmpImg.naturalWidth;
+    tmp.height = tmpImg.naturalHeight;
+    const tCtx = tmp.getContext('2d');
+    tCtx.drawImage(tmpImg, 0, 0);
+    origPixels = tCtx.getImageData(0, 0, tmp.width, tmp.height);
+  };
+  tmpImg.src = dataUrl;
   document.getElementById('uploadIcon').textContent = '✓';
   document.getElementById('uploadLabel').innerHTML = '<span class="loaded-label">Photo loaded — hit Generate</span>';
   document.getElementById('uploadZone').classList.add('has-image');
@@ -250,9 +261,14 @@ async function generateCard() {
     canvas.width = W;
     canvas.height = H;
 
-    // Draw original + save pixels immediately
-    ctx.drawImage(img, 0, 0, W, H);
-    origPixels = ctx.getImageData(0, 0, W, H);
+    // Always restore from saved original pixels — never from modified canvas
+    if (origPixels && origPixels.width === W && origPixels.height === H) {
+      ctx.putImageData(origPixels, 0, 0);
+    } else {
+      // First time: draw and save
+      ctx.drawImage(img, 0, 0, W, H);
+      origPixels = ctx.getImageData(0, 0, W, H);
+    }
 
     // Layout — measured from 762×824 BULK rank card
     const EX = Math.floor(W * 0.490);   // erase zone left edge
