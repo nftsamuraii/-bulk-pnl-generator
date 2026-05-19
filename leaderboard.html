@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BULK Rank Card Editor</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Terminal Grotesque';
+      src: url('https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/terminal-grotesque-webfont.woff2') format('woff2');
+      font-weight: normal; font-style: normal; font-display: swap;
+    }
+  </style>
+  <style>
+    :root { --bg:#0a0a0a; --card:#121212; --border:#2a2a2a; --gold:#c8b882; --green:#00e8a2; --red:#ff4060; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:#fff; font-family:'IBM Plex Sans',sans-serif; min-height:100vh; padding:20px; }
+
+    .container { max-width:1100px; margin:0 auto; display:flex; gap:30px; flex-wrap:wrap; }
+    .panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; flex:1; min-width:300px; }
+
+    h2 { font-family:'Playfair Display',serif; font-size:14px; letter-spacing:3px; color:var(--gold); margin-bottom:20px; text-transform:uppercase; }
+
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:11px; letter-spacing:2px; color:#888; text-transform:uppercase; margin-bottom:8px; }
+    .field input { width:100%; background:#1e1e1e; border:1px solid var(--border); border-radius:8px; color:#fff; font-family:'IBM Plex Sans',sans-serif; font-size:14px; padding:12px 14px; outline:none; transition:border-color 0.2s; }
+    .field input:focus { border-color:var(--gold); }
+
+    .fields-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .fields-grid .field { margin-bottom:0; }
+
+    .upload-zone { width:100%; padding:32px 20px; background:#1a1a1a; border:2px dashed #333; border-radius:12px; text-align:center; cursor:pointer; transition:all 0.2s; margin-bottom:20px; position:relative; display:block; }
+    .upload-zone:hover { border-color:var(--gold); background:#1e1c18; }
+    .upload-zone.has-image { border-style:solid; border-color:var(--gold); }
+    .upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .upload-icon { font-size:36px; margin-bottom:8px; }
+    .upload-zone p { color:#666; font-size:12px; letter-spacing:1px; line-height:1.8; }
+    .loaded-label { color:var(--gold); font-size:13px; font-weight:500; }
+
+    .info-box { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:10px; padding:12px 14px; margin-bottom:20px; font-size:12px; color:#555; line-height:1.7; }
+    .info-box b { color:#888; }
+
+    .color-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px; }
+    .swatch { width:30px; height:30px; border-radius:6px; border:2px solid #333; cursor:pointer; transition:border-color 0.15s; }
+    .swatch.active { border-color:var(--gold); }
+
+    .preview-wrap { display:flex; flex-direction:column; align-items:center; }
+    .preview-empty { width:100%; max-width:360px; height:440px; background:#1a1a1a; border:2px dashed var(--border); border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#555; font-size:13px; text-align:center; gap:12px; }
+    .preview-empty .icon { font-size:48px; opacity:0.4; }
+
+    #rankCanvas { max-width:100%; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.5); display:none; }
+
+    .btn-generate { width:100%; padding:14px; margin-top:20px; background:linear-gradient(135deg,#c8b882 0%,#a89862 100%); border:none; border-radius:8px; color:#0a0a0a; font-family:'Playfair Display',serif; font-size:16px; font-weight:600; letter-spacing:3px; cursor:pointer; transition:all 0.2s; }
+    .btn-generate:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(200,184,130,0.3); }
+
+    .btn-action { width:100%; padding:12px; margin-top:10px; background:transparent; border:1px solid var(--gold); border-radius:8px; color:var(--gold); font-family:'Playfair Display',serif; font-size:14px; letter-spacing:2px; cursor:pointer; opacity:0; pointer-events:none; transition:all 0.2s; }
+    .btn-action.visible { opacity:1; pointer-events:auto; }
+    .btn-action:hover { background:rgba(200,184,130,0.08); }
+
+    .paste-hint { font-size:11px; color:#444; letter-spacing:1px; text-align:center; margin-top:8px; }
+  </style>
+</head>
+<body>
+
+  <header style="max-width:1100px;margin:0 auto 28px;display:flex;align-items:center;justify-content:center;padding:20px 0;">
+    <img src="https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/BULKPNLCARD.png" alt="BULK" style="height:38px;">
+  </header>
+
+  <div class="container">
+
+    <!-- LEFT: Controls -->
+    <div class="panel">
+
+      <h2>Upload Rank Card</h2>
+
+      <label class="upload-zone" id="uploadZone">
+        <input type="file" accept="image/*" onchange="loadPhoto(event)">
+        <div class="upload-icon" id="uploadIcon">🏆</div>
+        <p id="uploadLabel">Upload your BULK leaderboard screenshot<br><span style="color:#555;font-size:10px;">JPG · PNG · WEBP — or paste with Ctrl+V</span></p>
+      </label>
+
+      <div class="info-box">
+        <b>How it works:</b> Upload your rank card → enter your new stats below → hit Generate. The original text is replaced cleanly — same font, same position, no overlap.
+      </div>
+
+      <h2>Edit Stats</h2>
+
+      <div class="field">
+        <label># Global Rank</label>
+        <input type="text" id="rankNum" placeholder="#1" value="#1">
+      </div>
+
+      <div class="fields-grid">
+        <div class="field">
+          <label>Cashflow ROI</label>
+          <input type="text" id="rankRoi" placeholder="+39.6%" value="+39.6%">
+        </div>
+        <div class="field">
+          <label>Net Realized PnL</label>
+          <input type="text" id="rankPnl" placeholder="$3.96K" value="$3.96K">
+        </div>
+        <div class="field">
+          <label>Total Volume</label>
+          <input type="text" id="rankVol" placeholder="$1.13M" value="$1.13M">
+        </div>
+        <div class="field">
+          <label>Win Rate</label>
+          <input type="text" id="rankWin" placeholder="100%" value="100%">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:12px;">
+        <label>Value Color</label>
+        <div class="color-row">
+          <div class="swatch active" id="sw0" style="background:#F5A623;" onclick="setAccent('#F5A623',0)" title="Gold (original)"></div>
+          <div class="swatch" id="sw1" style="background:#00e8a2;" onclick="setAccent('#00e8a2',1)" title="Green"></div>
+          <div class="swatch" id="sw2" style="background:#ff4060;" onclick="setAccent('#ff4060',2)" title="Red"></div>
+          <div class="swatch" id="sw3" style="background:#7B8CFF;" onclick="setAccent('#7B8CFF',3)" title="Blue"></div>
+          <div class="swatch" id="sw4" style="background:#ffffff;" onclick="setAccent('#ffffff',4)" title="White"></div>
+          <input type="color" id="customColor" value="#F5A623" oninput="setAccentCustom(this.value)" style="width:30px;height:30px;border:none;border-radius:6px;cursor:pointer;padding:0;" title="Custom">
+          <span style="font-size:11px;color:#444;letter-spacing:1px;">custom</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Preview -->
+    <div class="panel preview-wrap">
+      <h2>Preview</h2>
+
+      <div class="preview-empty" id="emptyState">
+        <span class="icon">🏆</span>
+        <span>Upload a rank card<br>and hit Generate</span>
+      </div>
+
+      <canvas id="rankCanvas"></canvas>
+
+      <button class="btn-generate" onclick="generateCard()">GENERATE</button>
+      <button class="btn-action" id="btnDownload" onclick="downloadCard()">⬇ DOWNLOAD</button>
+      <button class="btn-action" id="btnCopy" onclick="copyCard()">📋 COPY</button>
+
+      <p class="paste-hint">Tip: paste image with Ctrl+V anywhere on this page</p>
+    </div>
+
+  </div>
+
+<script>
+let photoBg = null;
+let origPixels = null;
+let accentColor = '#F5A623';
+
+// ── Color swatches ──────────────────────────────────────────
+function setAccent(color, idx) {
+  accentColor = color;
+  for (let i = 0; i < 5; i++) {
+    const sw = document.getElementById('sw' + i);
+    if (sw) sw.classList.toggle('active', i === idx);
+  }
+}
+function setAccentCustom(color) {
+  accentColor = color;
+  for (let i = 0; i < 5; i++) {
+    const sw = document.getElementById('sw' + i);
+    if (sw) sw.classList.remove('active');
+  }
+}
+
+// ── Photo upload ────────────────────────────────────────────
+function loadPhoto(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => setPhoto(ev.target.result);
+  reader.readAsDataURL(file);
+}
+
+function setPhoto(dataUrl) {
+  photoBg = dataUrl;
+  origPixels = null;
+  document.getElementById('uploadIcon').textContent = '✓';
+  document.getElementById('uploadLabel').innerHTML = '<span class="loaded-label">Photo loaded — hit Generate</span>';
+  document.getElementById('uploadZone').classList.add('has-image');
+}
+
+// ── Paste anywhere ──────────────────────────────────────────
+document.addEventListener('paste', e => {
+  const items = e.clipboardData && e.clipboardData.items; if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = ev => setPhoto(ev.target.result);
+      reader.readAsDataURL(items[i].getAsFile());
+      e.preventDefault(); break;
+    }
+  }
+});
+
+// ── Pixel-perfect erase using saved ImageData ───────────────
+function restoreBg(ctx, rx, ry, rw, rh) {
+  if (!origPixels) return;
+  rx = Math.floor(rx); ry = Math.floor(ry);
+  rw = Math.ceil(rw);  rh = Math.ceil(rh);
+  const SW = origPixels.width, SH = origPixels.height;
+  const slice = ctx.createImageData(rw, rh);
+  for (let row = 0; row < rh; row++) {
+    const sy = ry + row; if (sy < 0 || sy >= SH) continue;
+    for (let col = 0; col < rw; col++) {
+      const sx = rx + col; if (sx < 0 || sx >= SW) continue;
+      const si = (sy * SW + sx) * 4;
+      const di = (row * rw + col) * 4;
+      slice.data[di]   = origPixels.data[si];
+      slice.data[di+1] = origPixels.data[si+1];
+      slice.data[di+2] = origPixels.data[si+2];
+      slice.data[di+3] = origPixels.data[si+3];
+    }
+  }
+  ctx.putImageData(slice, rx, ry);
+}
+
+// ── Main generate ───────────────────────────────────────────
+async function generateCard() {
+  if (!photoBg) { alert('Please upload a rank card photo first!'); return; }
+
+  // Preload fonts
+  try {
+    await Promise.race([
+      Promise.all([
+        document.fonts.load('400 48px "Terminal Grotesque"'),
+        document.fonts.load('400 18px "IBM Plex Sans"'),
+      ]),
+      new Promise((_, r) => setTimeout(r, 3000))
+    ]);
+  } catch(e) {}
+
+  const rankNum = document.getElementById('rankNum').value || '#1';
+  const roi     = document.getElementById('rankRoi').value || '+0%';
+  const pnl     = document.getElementById('rankPnl').value || '$0';
+  const vol     = document.getElementById('rankVol').value || '$0';
+  const win     = document.getElementById('rankWin').value || '0%';
+
+  const canvas = document.getElementById('rankCanvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+
+  img.onload = () => {
+    const W = img.naturalWidth;
+    const H = img.naturalHeight;
+    canvas.width = W;
+    canvas.height = H;
+
+    // Draw original + save pixels immediately
+    ctx.drawImage(img, 0, 0, W, H);
+    origPixels = ctx.getImageData(0, 0, W, H);
+
+    // Layout — measured from 762×824 BULK rank card
+    const EX = Math.floor(W * 0.490);   // erase zone left edge
+    const EW = Math.ceil(W * 0.470);    // erase zone width
+    const TX = Math.round(W * 0.952);   // text right anchor
+
+    const LABEL_FS = Math.round(H * 0.0235); // IBM Plex Sans label size
+    const VAL_FS   = Math.round(H * 0.052);  // Terminal Grotesque stat size
+    const RANK_FS  = Math.round(H * 0.100);  // Terminal Grotesque rank size
+
+    const rows = [
+      {
+        labelEY0: H*0.195, labelEY1: H*0.242,
+        valEY0:   H*0.258, valEY1:   H*0.368,
+        labelY:   H*0.234, labelText: 'Your Global Rank',
+        valueY:   H*0.358, value: rankNum, valFS: RANK_FS,
+      },
+      {
+        labelEY0: H*0.396, labelEY1: H*0.443,
+        valEY0:   H*0.440, valEY1:   H*0.508,
+        labelY:   H*0.432, labelText: 'Cashflow Adjusted ROI',
+        valueY:   H*0.498, value: roi, valFS: VAL_FS,
+      },
+      {
+        labelEY0: H*0.520, labelEY1: H*0.562,
+        valEY0:   H*0.558, valEY1:   H*0.630,
+        labelY:   H*0.551, labelText: 'Net Realized PnL',
+        valueY:   H*0.620, value: pnl, valFS: VAL_FS,
+      },
+      {
+        labelEY0: H*0.644, labelEY1: H*0.680,
+        valEY0:   H*0.678, valEY1:   H*0.752,
+        labelY:   H*0.670, labelText: 'Total Vol',
+        valueY:   H*0.742, value: vol, valFS: VAL_FS,
+      },
+      {
+        labelEY0: H*0.768, labelEY1: H*0.806,
+        valEY0:   H*0.804, valEY1:   H*0.872,
+        labelY:   H*0.796, labelText: 'Win Rate',
+        valueY:   H*0.862, value: win, valFS: VAL_FS,
+      },
+    ];
+
+    rows.forEach(row => {
+      // Erase old text by restoring original pixels
+      restoreBg(ctx, EX, row.labelEY0, EW, row.labelEY1 - row.labelEY0);
+      restoreBg(ctx, EX, row.valEY0,   EW, row.valEY1   - row.valEY0);
+
+      // Draw label — IBM Plex Sans, white 62%
+      ctx.save();
+      ctx.textAlign = 'right';
+      ctx.font = `400 ${LABEL_FS}px 'IBM Plex Sans', sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.62)';
+      ctx.fillText(row.labelText, TX, row.labelY);
+      ctx.restore();
+
+      // Draw value — Terminal Grotesque, accent color
+      ctx.save();
+      ctx.textAlign = 'right';
+      ctx.font = `400 ${row.valFS}px 'Terminal Grotesque', 'Share Tech Mono', monospace`;
+      ctx.fillStyle = accentColor;
+      ctx.fillText(row.value, TX, row.valueY);
+      ctx.restore();
+    });
+
+    // Show result
+    document.getElementById('emptyState').style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('btnDownload').classList.add('visible');
+    document.getElementById('btnCopy').classList.add('visible');
+  };
+
+  img.src = photoBg;
+}
+
+// ── Download ────────────────────────────────────────────────
+function downloadCard() {
+  const canvas = document.getElementById('rankCanvas');
+  const btn = document.getElementById('btnDownload');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳ Saving...';
+  try {
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.download = 'bulk-rank-card.png';
+    a.href = dataUrl;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => { btn.innerHTML = orig; }, 800);
+  } catch(e) {
+    btn.innerHTML = orig;
+    alert('Right-click on the image → Save image as...');
+  }
+}
+
+// ── Copy ────────────────────────────────────────────────────
+async function copyCard() {
+  const canvas = document.getElementById('rankCanvas');
+  const btn = document.getElementById('btnCopy');
+  try {
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    btn.innerHTML = '✓ COPIED!';
+    setTimeout(() => { btn.innerHTML = '📋 COPY'; }, 2000);
+  } catch(e) {
+    // Fallback: open in new tab
+    try {
+      window.open(canvas.toDataURL('image/png'), '_blank');
+    } catch(e2) {
+      alert('Could not copy. Try Download instead.');
+    }
+  }
+}
+</script>
+</body>
+</html>
