@@ -261,62 +261,34 @@ async function generateCard() {
     canvas.width = W;
     canvas.height = H;
 
-    // Always restore from saved original pixels — never from modified canvas
-    if (origPixels && origPixels.width === W && origPixels.height === H) {
-      ctx.putImageData(origPixels, 0, 0);
-    } else {
-      // First time: draw and save
-      ctx.drawImage(img, 0, 0, W, H);
+    // Step 1: draw original to get clean pixels
+    ctx.drawImage(img, 0, 0, W, H);
+
+    // Step 2: save origPixels only once (first generate)
+    if (!origPixels || origPixels.width !== W || origPixels.height !== H) {
       origPixels = ctx.getImageData(0, 0, W, H);
     }
 
+    // Step 3: ALWAYS restore full original before drawing new text
+    // This guarantees zero overlap regardless of how many times Generate is clicked
+    ctx.putImageData(origPixels, 0, 0);
+
     // Layout — measured from 762×824 BULK rank card
-    const EX = Math.floor(W * 0.490);   // erase zone left edge
-    const EW = Math.ceil(W * 0.470);    // erase zone width
     const TX = Math.round(W * 0.952);   // text right anchor
 
-    const LABEL_FS = Math.round(H * 0.0235); // IBM Plex Sans label size
-    const VAL_FS   = Math.round(H * 0.052);  // Terminal Grotesque stat size
-    const RANK_FS  = Math.round(H * 0.100);  // Terminal Grotesque rank size
+    const LABEL_FS = Math.round(H * 0.0235);
+    const VAL_FS   = Math.round(H * 0.052);
+    const RANK_FS  = Math.round(H * 0.100);
 
     const rows = [
-      {
-        labelEY0: H*0.195, labelEY1: H*0.242,
-        valEY0:   H*0.258, valEY1:   H*0.368,
-        labelY:   H*0.234, labelText: 'Your Global Rank',
-        valueY:   H*0.358, value: rankNum, valFS: RANK_FS,
-      },
-      {
-        labelEY0: H*0.396, labelEY1: H*0.443,
-        valEY0:   H*0.440, valEY1:   H*0.508,
-        labelY:   H*0.432, labelText: 'Cashflow Adjusted ROI',
-        valueY:   H*0.498, value: roi, valFS: VAL_FS,
-      },
-      {
-        labelEY0: H*0.520, labelEY1: H*0.562,
-        valEY0:   H*0.558, valEY1:   H*0.630,
-        labelY:   H*0.551, labelText: 'Net Realized PnL',
-        valueY:   H*0.620, value: pnl, valFS: VAL_FS,
-      },
-      {
-        labelEY0: H*0.644, labelEY1: H*0.680,
-        valEY0:   H*0.678, valEY1:   H*0.752,
-        labelY:   H*0.670, labelText: 'Total Vol',
-        valueY:   H*0.742, value: vol, valFS: VAL_FS,
-      },
-      {
-        labelEY0: H*0.768, labelEY1: H*0.806,
-        valEY0:   H*0.804, valEY1:   H*0.872,
-        labelY:   H*0.796, labelText: 'Win Rate',
-        valueY:   H*0.862, value: win, valFS: VAL_FS,
-      },
+      { labelY: H*0.234, labelText: 'Your Global Rank',      valueY: H*0.358, value: rankNum, valFS: RANK_FS },
+      { labelY: H*0.432, labelText: 'Cashflow Adjusted ROI', valueY: H*0.498, value: roi,     valFS: VAL_FS  },
+      { labelY: H*0.551, labelText: 'Net Realized PnL',      valueY: H*0.620, value: pnl,     valFS: VAL_FS  },
+      { labelY: H*0.670, labelText: 'Total Vol',             valueY: H*0.742, value: vol,     valFS: VAL_FS  },
+      { labelY: H*0.796, labelText: 'Win Rate',              valueY: H*0.862, value: win,     valFS: VAL_FS  },
     ];
 
     rows.forEach(row => {
-      // Erase old text by restoring original pixels
-      restoreBg(ctx, EX, row.labelEY0, EW, row.labelEY1 - row.labelEY0);
-      restoreBg(ctx, EX, row.valEY0,   EW, row.valEY1   - row.valEY0);
-
       // Draw label — IBM Plex Sans, white 62%
       ctx.save();
       ctx.textAlign = 'right';
