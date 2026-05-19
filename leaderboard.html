@@ -183,7 +183,7 @@ function setPhoto(dataUrl) {
   const tmpImg = new Image();
   tmpImg.onload = () => {
     const tmp = document.createElement('canvas');
-    tmp.width = tmpImg.naturalWidth;
+    tmp.width  = tmpImg.naturalWidth;
     tmp.height = tmpImg.naturalHeight;
     const tCtx = tmp.getContext('2d');
     tCtx.drawImage(tmpImg, 0, 0);
@@ -192,49 +192,43 @@ function setPhoto(dataUrl) {
     const imgData = tCtx.getImageData(0, 0, W, H);
     const d = imgData.data;
 
-    // Find text zone: right 50% of image
+    // Text zone: right column starting at ~49% of width
     const zoneX = Math.floor(W * 0.49);
+    // Sample bg from strip just LEFT of text zone (40px wide)
+    const sampleX0 = Math.max(0, zoneX - 55);
+    const sampleX1 = zoneX - 10;
 
-    // For each pixel in the right zone:
-    // if it's orange (text) or bright white (label) — replace with avg of nearby non-text pixels
+    // For each row in the text zone, get the background color from left strip
+    // then paint the entire right zone with that color
     for (let y = 0; y < H; y++) {
+      // Sample avg color of this row from the background strip
+      let sr = 0, sg = 0, sb = 0, cnt = 0;
+      for (let x = sampleX0; x < sampleX1; x++) {
+        const i = (y * W + x) * 4;
+        sr += d[i]; sg += d[i+1]; sb += d[i+2];
+        cnt++;
+      }
+      if (cnt === 0) continue;
+      const bgR = Math.round(sr / cnt);
+      const bgG = Math.round(sg / cnt);
+      const bgB = Math.round(sb / cnt);
+
+      // Paint the entire right column of this row with the sampled bg color
       for (let x = zoneX; x < W; x++) {
         const i = (y * W + x) * 4;
-        const r = d[i], g = d[i+1], b = d[i+2];
-
-        const isOrange = r > 150 && r > g * 1.35 && b < 110;
-        const isWhite  = r > 170 && g > 155 && b > 130 && Math.abs(r-g) < 40;
-
-        if (isOrange || isWhite) {
-          // Sample background: look left from text zone start for bg color
-          // Use the pixel at same y but at x = zoneX - 20 (pure background)
-          let br = 0, bg = 0, bb = 0, cnt = 0;
-          for (let dx = -60; dx <= -10; dx++) {
-            const sx = x + dx;
-            if (sx < 0) continue;
-            const si = (y * W + sx) * 4;
-            const sr = d[si], sg = d[si+1], sblu = d[si+2];
-            // Only use if it's also not text
-            const sOrange = sr > 150 && sr > sg * 1.35 && sblu < 110;
-            const sWhite  = sr > 170 && sg > 155 && sblu > 130 && Math.abs(sr-sg) < 40;
-            if (!sOrange && !sWhite) { br += sr; bg += sg; bb += sblu; cnt++; }
-          }
-          if (cnt > 0) {
-            d[i]   = Math.round(br / cnt);
-            d[i+1] = Math.round(bg / cnt);
-            d[i+2] = Math.round(bb / cnt);
-          }
-        }
+        d[i]   = bgR;
+        d[i+1] = bgG;
+        d[i+2] = bgB;
+        d[i+3] = 255;
       }
     }
 
     tCtx.putImageData(imgData, 0, 0);
     origPixels = tCtx.getImageData(0, 0, W, H);
-    // Update photoBg to cleaned version
     photoBg = tmp.toDataURL('image/png');
   };
-  tmpImg.src = dataUrl;
 
+  tmpImg.src = dataUrl;
   document.getElementById('uploadIcon').textContent = '✓';
   document.getElementById('uploadLabel').innerHTML = '<span class="loaded-label">Photo loaded — hit Generate</span>';
   document.getElementById('uploadZone').classList.add('has-image');
