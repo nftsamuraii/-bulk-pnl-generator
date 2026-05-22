@@ -137,28 +137,45 @@ async function analyzeScreenshot(dataUrl) {
     const response = await fetch('https://bulk-pnl-api.vercel.app/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image: base64,
-        mediaType: mediaType,
-        prompt: 'This is a BULK leaderboard card. Extract these exact values and respond ONLY with valid JSON, no markdown, no explanation: {"rank":"#661","roi":"+75.1%","pnl":"$864.96","vol":"$43.58K","winRate":"50%"}. Use the exact values shown in the image. If a value is missing use empty string "".'
-      })
+      body: JSON.stringify({ image: base64, mediaType: mediaType })
     });
 
     const data = await response.json();
     const text = (data.content?.find(c => c.type === 'text') || data.content?.[0])?.text || '';
 
-    if (!text || text === 'NOT_A_CARD') throw new Error('no data');
+    if (!text || text.includes('NOT_A_CARD')) throw new Error('no data');
 
-    const parsed = JSON.parse(text.replace(/```json[\n]?|```/g, '').trim());
+    // Try JSON parse first
+    let parsed = null;
+    try {
+      parsed = JSON.parse(text.replace(/```json[\n]?|```/g, '').trim());
+    } catch(e) {}
 
-    if (parsed.rank) document.getElementById('rankNum').value = parsed.rank;
-    if (parsed.roi) document.getElementById('rankRoi').value = parsed.roi;
-    if (parsed.pnl) document.getElementById('rankPnl').value = parsed.pnl;
-    if (parsed.vol) document.getElementById('rankVol').value = parsed.vol;
-    if (parsed.winRate) document.getElementById('rankWin').value = parsed.winRate;
+    if (parsed) {
+      // PnL card format — map fields
+      if (parsed.rank)        document.getElementById('rankNum').value = parsed.rank;
+      else if (parsed.pnl)    document.getElementById('rankNum').value = parsed.pnl;
+
+      if (parsed.roi)         document.getElementById('rankRoi').value = parsed.roi;
+      if (parsed.pnl && parsed.rank) document.getElementById('rankPnl').value = parsed.pnl;
+      if (parsed.vol)         document.getElementById('rankVol').value = parsed.vol;
+      if (parsed.winRate)     document.getElementById('rankWin').value = parsed.winRate;
+    }
+
+    // Always try regex from raw text as fallback/supplement
+    const rankMatch = text.match(/#\s*(\d+)/);
+    const roiMatch  = text.match(/([+-]\d+\.?\d*%)/);
+    const dollarMatches = [...text.matchAll(/\$[\d,]+\.?\d*[KMBkm]?/g)].map(m => m[0]);
+    const pctMatch  = text.match(/(\d+)%/);
+
+    if (rankMatch)  document.getElementById('rankNum').value = '#' + rankMatch[1];
+    if (roiMatch)   document.getElementById('rankRoi').value = roiMatch[1];
+    if (dollarMatches[0]) document.getElementById('rankPnl').value = dollarMatches[0];
+    if (dollarMatches[1]) document.getElementById('rankVol').value = dollarMatches[1];
+    if (pctMatch && !roiMatch) document.getElementById('rankWin').value = pctMatch[1] + '%';
 
     statusBox.className = 'status-box show success';
-    statusBox.textContent = '✓ Stats extracted! Edit below if needed.';
+    statusBox.textContent = '✓ Done! Check and edit values below if needed.';
 
   } catch(e) {
     statusBox.className = 'status-box show error';
