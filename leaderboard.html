@@ -216,11 +216,14 @@ async function generateCard() {
 
   const canvas = document.getElementById('rankCanvas');
   const ctx    = canvas.getContext('2d');
-  const W = bgPixels.width, H = bgPixels.height;
+  const W = 762, H = 824;
   canvas.width = W; canvas.height = H;
 
-  // Draw background
-  ctx.putImageData(bgPixels, 0, 0);
+  // Draw background scaled to 762x824
+  const tmpCanvas = document.createElement('canvas');
+  tmpCanvas.width = bgPixels.width; tmpCanvas.height = bgPixels.height;
+  tmpCanvas.getContext('2d').putImageData(bgPixels, 0, 0);
+  ctx.drawImage(tmpCanvas, 0, 0, W, H);
 
   // Dark gradient overlay on right so text is always readable
   const grad = ctx.createLinearGradient(W * 0.30, 0, W, 0);
