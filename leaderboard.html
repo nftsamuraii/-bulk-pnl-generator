@@ -202,7 +202,7 @@ async function generateCard() {
     await Promise.race([
       Promise.all([
         document.fonts.load('400 72px "Terminal Grotesque"'),
-        document.fonts.load('300 18px "IBM Plex Sans"'),
+        document.fonts.load('400 18px "IBM Plex Sans"'),
       ]),
       new Promise((_,r) => setTimeout(r, 3000))
     ]);
@@ -250,7 +250,7 @@ async function generateCard() {
     // Label
     ctx.save();
     ctx.textAlign = 'right';
-    ctx.font = '300 ' + LABEL_FS + 'px "IBM Plex Sans", sans-serif';
+    ctx.font = '400 ' + LABEL_FS + 'px "IBM Plex Sans", sans-serif';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 2;
