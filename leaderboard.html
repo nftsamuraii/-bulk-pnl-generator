@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BULK Rank Card Editor</title>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     @font-face {
       font-family: 'Terminal Grotesque';
@@ -278,10 +278,11 @@ async function generateCard() {
   // Date bottom left — from AI extracted data
   const dateStr = document.getElementById('rankDate').value;
   if (dateStr) {
-    const DATE_FS = Math.round(H * 0.022);
+    const DATE_FS = Math.round(H * 0.017); // ~14px on 824px
     ctx.save();
     ctx.textAlign = 'left';
-    ctx.font = '400 ' + DATE_FS + 'px "Terminal Grotesque", "Share Tech Mono", monospace';
+    ctx.font = '600 ' + DATE_FS + 'px "JetBrains Mono", monospace';
+    ctx.letterSpacing = '0.5px';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur = 8;
     ctx.fillStyle = 'rgba(255,255,255,1)';
