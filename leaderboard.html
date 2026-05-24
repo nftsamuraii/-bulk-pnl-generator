@@ -46,8 +46,6 @@
     .status-box.show { display:block; }
     .status-box.success { border-color:rgba(0,232,162,0.3); color:#00e8a2; }
     .status-box.error { border-color:rgba(255,64,96,0.3); color:#ff4060; }
-    .divider { height:1px; background:var(--border); margin:20px 0; }
-    .or-label { text-align:center; font-size:11px; color:#555; letter-spacing:2px; margin:-8px 0; position:relative; background:var(--card); display:inline-block; padding:0 12px; left:50%; transform:translateX(-50%); }
   </style>
 </head>
 <body>
@@ -57,8 +55,6 @@
 
   <div class="container">
     <div class="panel">
-
-      <!-- STEP 1: Upload original screenshot -->
       <h2>Step 1 — Original Screenshot</h2>
       <label class="upload-zone" id="origZone">
         <input type="file" accept="image/*" onchange="loadOriginal(event)">
@@ -68,7 +64,6 @@
 
       <div class="status-box" id="statusBox">Analyzing...</div>
 
-      <!-- STEP 2: Upload clean background -->
       <h2>Step 2 — New Background</h2>
       <label class="upload-zone" id="bgZone">
         <input type="file" accept="image/*" onchange="loadBackground(event)">
@@ -77,7 +72,6 @@
         <p id="bgLabel">Upload a clean background photo<br><span style="color:#555;font-size:10px;">Without any text</span></p>
       </label>
 
-      <!-- STEP 3: Extracted stats (editable) -->
       <h2>Stats (auto-filled)</h2>
       <div class="field">
         <label># Global Rank</label>
@@ -89,7 +83,6 @@
         <div class="field"><label>Total Volume</label><input type="text" id="rankVol" placeholder="Analyzing..." value=""></div>
         <div class="field"><label>Win Rate</label><input type="text" id="rankWin" placeholder="Analyzing..." value=""></div>
       </div>
-
     </div>
 
     <div class="panel preview-wrap">
@@ -108,10 +101,8 @@
 <script>
 let origDataUrl = null;
 let bgDataUrl = null;
-let origPixels = null;
 let bgPixels = null;
 
-// ── Load original screenshot + analyze with AI ──────────────
 function loadOriginal(e) {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
@@ -145,33 +136,28 @@ async function analyzeScreenshot(dataUrl) {
 
     if (!text || text.includes('NOT_A_CARD')) throw new Error('no data');
 
-    // Try JSON parse first
     let parsed = null;
     try {
       parsed = JSON.parse(text.replace(/```json[\n]?|```/g, '').trim());
     } catch(e) {}
 
     if (parsed) {
-      // PnL card format — map fields
-      if (parsed.rank)        document.getElementById('rankNum').value = parsed.rank;
-      else if (parsed.pnl)    document.getElementById('rankNum').value = parsed.pnl;
-
-      if (parsed.roi)         document.getElementById('rankRoi').value = parsed.roi;
+      if (parsed.rank)              document.getElementById('rankNum').value = parsed.rank;
+      if (parsed.roi)               document.getElementById('rankRoi').value = parsed.roi;
       if (parsed.pnl && parsed.rank) document.getElementById('rankPnl').value = parsed.pnl;
-      if (parsed.vol)         document.getElementById('rankVol').value = parsed.vol;
-      if (parsed.winRate)     document.getElementById('rankWin').value = parsed.winRate;
+      if (parsed.vol)               document.getElementById('rankVol').value = parsed.vol;
+      if (parsed.winRate)           document.getElementById('rankWin').value = parsed.winRate;
     }
 
-    // Always try regex from raw text as fallback/supplement
-    const rankMatch = text.match(/#\s*(\d+)/);
-    const roiMatch  = text.match(/([+-]\d+\.?\d*%)/);
+    const rankMatch    = text.match(/#\s*(\d+)/);
+    const roiMatch     = text.match(/([+-]\d+\.?\d*%)/);
     const dollarMatches = [...text.matchAll(/\$[\d,]+\.?\d*[KMBkm]?/g)].map(m => m[0]);
-    const pctMatch  = text.match(/(\d+)%/);
+    const pctMatch     = text.match(/(\d+)%/);
 
-    if (rankMatch)  document.getElementById('rankNum').value = '#' + rankMatch[1];
-    if (roiMatch)   document.getElementById('rankRoi').value = roiMatch[1];
-    if (dollarMatches[0]) document.getElementById('rankPnl').value = dollarMatches[0];
-    if (dollarMatches[1]) document.getElementById('rankVol').value = dollarMatches[1];
+    if (rankMatch)          document.getElementById('rankNum').value = '#' + rankMatch[1];
+    if (roiMatch)           document.getElementById('rankRoi').value = roiMatch[1];
+    if (dollarMatches[0])   document.getElementById('rankPnl').value = dollarMatches[0];
+    if (dollarMatches[1])   document.getElementById('rankVol').value = dollarMatches[1];
     if (pctMatch && !roiMatch) document.getElementById('rankWin').value = pctMatch[1] + '%';
 
     statusBox.className = 'status-box show success';
@@ -183,14 +169,11 @@ async function analyzeScreenshot(dataUrl) {
   }
 }
 
-// ── Load clean background ───────────────────────────────────
 function loadBackground(e) {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     bgDataUrl = ev.target.result;
-
-    // Save original pixels
     const tmpImg = new Image();
     tmpImg.onload = () => {
       const tmp = document.createElement('canvas');
@@ -200,7 +183,6 @@ function loadBackground(e) {
       bgPixels = tCtx.getImageData(0, 0, tmp.width, tmp.height);
     };
     tmpImg.src = ev.target.result;
-
     const preview = document.getElementById('bgPreview');
     preview.style.backgroundImage = 'url(' + ev.target.result + ')';
     preview.style.display = 'block';
@@ -212,16 +194,15 @@ function loadBackground(e) {
   reader.readAsDataURL(file);
 }
 
-// ── Generate card ───────────────────────────────────────────
 async function generateCard() {
   if (!bgDataUrl) { alert('Please upload a background photo!'); return; }
-  if (!bgPixels) { alert('Background still loading, wait a moment...'); return; }
+  if (!bgPixels)  { alert('Background still loading, wait a moment...'); return; }
 
   try {
     await Promise.race([
       Promise.all([
         document.fonts.load('400 72px "Terminal Grotesque"'),
-        document.fonts.load('400 18px "IBM Plex Sans"'),
+        document.fonts.load('500 18px "IBM Plex Sans"'),
       ]),
       new Promise((_,r) => setTimeout(r, 3000))
     ]);
@@ -234,43 +215,53 @@ async function generateCard() {
   const win     = document.getElementById('rankWin').value || '0%';
 
   const canvas = document.getElementById('rankCanvas');
-  const ctx = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
   const W = bgPixels.width, H = bgPixels.height;
   canvas.width = W; canvas.height = H;
 
-  // Draw clean background
+  // Draw background
   ctx.putImageData(bgPixels, 0, 0);
 
-  // Layout — measured from 762×824 BULK leaderboard card
+  // Dark gradient overlay on right so text is always readable
+  const grad = ctx.createLinearGradient(W * 0.30, 0, W, 0);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.60)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
   const TX = Math.round(W * 0.952);
 
-  // Font sizes matching original card exactly (measured from 762×824)
-  const RANK_FS  = Math.round(H * 0.0920); // #661 → 67px tall on 824px = ~0.092
-  const VAL_FS   = Math.round(H * 0.0530); // stats ~38-40px tall
-  const LABEL_FS = Math.round(H * 0.0240); // labels ~18-21px
+  const RANK_FS  = Math.round(H * 0.105);
+  const VAL_FS   = Math.round(H * 0.058);
+  const LABEL_FS = Math.round(H * 0.026);
 
-  // Y positions measured pixel-perfect from 762×824 BULK leaderboard card
   const rows = [
-    { labelText: 'Your Global Rank',      labelY: H*0.2306, value: rankNum, valueY: H*0.3519, valFS: RANK_FS },
-    { labelText: 'Net Realized PnL',      labelY: H*0.4260, value: pnl,     valueY: H*0.4939, valFS: VAL_FS  },
-    { labelText: 'Cashflow Adjusted ROI', labelY: H*0.5546, value: roi,     valueY: H*0.6141, valFS: VAL_FS  },
-    { labelText: 'Total Vol',             labelY: H*0.6735, value: vol,     valueY: H*0.7427, valFS: VAL_FS  },
-    { labelText: 'Win Rate',              labelY: H*0.7973, value: win,     valueY: H*0.8629, valFS: VAL_FS  },
+    { labelText: 'Your Global Rank',      labelY: H*0.230, value: rankNum, valueY: H*0.355, valFS: RANK_FS },
+    { labelText: 'Net Realized PnL',      labelY: H*0.430, value: pnl,     valueY: H*0.498, valFS: VAL_FS  },
+    { labelText: 'Cashflow Adjusted ROI', labelY: H*0.555, value: roi,     valueY: H*0.618, valFS: VAL_FS  },
+    { labelText: 'Total Vol',             labelY: H*0.675, value: vol,     valueY: H*0.743, valFS: VAL_FS  },
+    { labelText: 'Win Rate',              labelY: H*0.798, value: win,     valueY: H*0.863, valFS: VAL_FS  },
   ];
 
   rows.forEach(row => {
-    // Label — IBM Plex Sans, white 60%
+    // Label
     ctx.save();
     ctx.textAlign = 'right';
-    ctx.font = '400 ' + LABEL_FS + 'px "IBM Plex Sans", sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.62)';
+    ctx.font = '500 ' + LABEL_FS + 'px "IBM Plex Sans", sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = 'rgba(255,255,255,0.90)';
     ctx.fillText(row.labelText, TX, row.labelY);
     ctx.restore();
 
-    // Value — Terminal Grotesque, orange
+    // Value
     ctx.save();
     ctx.textAlign = 'right';
     ctx.font = '400 ' + row.valFS + 'px "Terminal Grotesque", "Share Tech Mono", monospace';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 3;
     ctx.fillStyle = '#F5A623';
     ctx.fillText(row.value, TX, row.valueY);
     ctx.restore();
@@ -282,7 +273,6 @@ async function generateCard() {
   document.getElementById('btnCopy').classList.add('visible');
 }
 
-// ── Download ────────────────────────────────────────────────
 function downloadCard() {
   const canvas = document.getElementById('rankCanvas');
   const btn = document.getElementById('btnDownload');
@@ -300,7 +290,6 @@ function downloadCard() {
   }
 }
 
-// ── Copy ────────────────────────────────────────────────────
 async function copyCard() {
   const canvas = document.getElementById('rankCanvas');
   const btn = document.getElementById('btnCopy');
@@ -315,7 +304,6 @@ async function copyCard() {
   }
 }
 
-// ── Paste handler ───────────────────────────────────────────
 document.addEventListener('paste', e => {
   const items = e.clipboardData?.items; if (!items) return;
   for (let i = 0; i < items.length; i++) {
