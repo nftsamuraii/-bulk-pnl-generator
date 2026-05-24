@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BULK Rank Card Editor</title>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     @font-face {
       font-family: 'Terminal Grotesque';
@@ -202,7 +202,7 @@ async function generateCard() {
     await Promise.race([
       Promise.all([
         document.fonts.load('400 72px "Terminal Grotesque"'),
-        document.fonts.load('500 18px "IBM Plex Sans"'),
+        document.fonts.load('600 18px "Inter"'),
       ]),
       new Promise((_,r) => setTimeout(r, 3000))
     ]);
@@ -250,7 +250,7 @@ async function generateCard() {
     // Label
     ctx.save();
     ctx.textAlign = 'right';
-    ctx.font = '500 ' + LABEL_FS + 'px "IBM Plex Sans", sans-serif';
+    ctx.font = '600 ' + LABEL_FS + 'px "Inter", sans-serif';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 2;
