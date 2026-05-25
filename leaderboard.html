@@ -8,6 +8,16 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     @font-face {
+      font-family: 'BULK';
+      src: url('https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/BULK-Medium.otf') format('opentype');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'BULK';
+      src: url('https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/BULK-Regular.otf') format('opentype');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
       font-family: 'Terminal Grotesque';
       src: url('https://raw.githubusercontent.com/nftsamuraii/-bulk-pnl-generator/main/assets/terminal-grotesque-webfont.woff2') format('woff2');
       font-weight: normal; font-style: normal; font-display: swap;
@@ -207,6 +217,7 @@ async function generateCard() {
     await Promise.race([
       Promise.all([
         document.fonts.load('400 72px "Terminal Grotesque"'),
+        document.fonts.load('500 14px "BULK"'),
         document.fonts.load('400 18px "IBM Plex Sans"'),
       ]),
       new Promise((_,r) => setTimeout(r, 3000))
@@ -281,7 +292,7 @@ async function generateCard() {
     const DATE_FS = Math.round(H * 0.017);
     ctx.save();
     ctx.textAlign = 'left';
-    ctx.font = '300 ' + DATE_FS + 'px "Roboto Mono", monospace';
+    ctx.font = '500 ' + DATE_FS + 'px "BULK", monospace';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur = 8;
     ctx.fillStyle = 'rgba(255,255,255,1)';
